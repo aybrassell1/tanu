@@ -112,7 +112,8 @@ export default function DebtScreen() {
           <StatTile label="Interest paid" icon="percent" value={<Money cents={s.interestYtd} variant="h3" compact />} caption="This year" />
         </Row>
         <Row gap={spacing.sm} style={{ alignItems: 'stretch' }}>
-          <StatTile label="Interest per month now" icon="trending-up" value={<Money cents={s.monthlyInterest} variant="h3" compact />} caption="Estimate at current balances and APRs" />
+          {/* Half a phone screen wide clips the label, so "now" moves into the caption. */}
+          <StatTile label="Interest per month" icon="trending-up" value={<Money cents={s.monthlyInterest} variant="h3" compact />} caption="Estimate at today's balances and APRs" />
           <StatTile label="Payments" icon="calendar" value={<Money cents={s.paymentsThisMonth} variant="h3" compact />} caption="This month" />
         </Row>
       </View>

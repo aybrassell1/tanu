@@ -69,7 +69,7 @@ export default function TaxEstimateScreen() {
                 <Money cents={row.amount} variant="small" whole />
               </View>
               <View style={styles.track}>
-                <View style={[styles.fill, { width: `${Math.round((row.amount / deductionCompare) * 100)}%`, backgroundColor: row.used ? colors.primary : colors.borderStrong }]} />
+                <View style={[styles.fill, { width: `${Math.round((row.amount / deductionCompare) * 100)}%`, backgroundColor: row.used ? colors.primary : colors.textTertiary }]} />
               </View>
             </View>
           ))}

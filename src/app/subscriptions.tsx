@@ -104,8 +104,8 @@ export default function SubscriptionsScreen() {
       ) : (
         <>
           <View style={styles.tiles}>
-            <StatTile label="Monthly cost" icon="calendar" value={<Money cents={model.monthly} variant="h3" />} caption="Average per month" />
-            <StatTile label="Yearly cost" icon="repeat" value={<Money cents={model.yearly} variant="h3" whole />} />
+            <StatTile label="Monthly" icon="calendar" value={<Money cents={model.monthly} variant="h3" />} caption="Average per month" />
+            <StatTile label="Yearly" icon="repeat" value={<Money cents={model.yearly} variant="h3" whole />} caption="Across a year" />
             <StatTile label="Active" icon="check-circle" value={String(model.active.length)} caption={model.inactive.length ? `${model.inactive.length} cancelled` : undefined} />
           </View>
           {model.outdated.length > 0 && (

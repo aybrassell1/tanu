@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import { useState, type ComponentType } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { EventRow, TransactionRow } from '@/components/finance/Rows';
+import { EventRow, TransactionRow, useMarkColor } from '@/components/finance/Rows';
 import { GoalStatusBadge } from '@/components/goals/GoalCard';
 import {
   Button,
@@ -102,11 +102,11 @@ export function OverviewWidget({ m }: { m: DashboardModel }) {
       <GradientCard style={{ gap: spacing.md }}>
           <View style={styles.heroTop}>
             <View style={{ flex: 1, gap: 4 }}>
-              <Text variant="small" weight="medium" color="rgba(255,255,255,0.85)">
+              <Text variant="small" weight="medium" color={colors.onGradientMuted}>
                 Available to spend
               </Text>
               <Money cents={p.available} variant="display" color={colors.onGradient} />
-              <Text variant="small" color="rgba(255,255,255,0.85)">
+              <Text variant="small" color={colors.onGradientMuted}>
                 {p.horizonReason === 'payday' ? `Until payday ${formatDate(p.horizon, 'weekday', m.today)}` : `Through ${formatDate(p.horizon, 'short', m.today)}`}
               </Text>
             </View>
@@ -122,7 +122,7 @@ export function OverviewWidget({ m }: { m: DashboardModel }) {
               <View style={styles.equationRule} />
               <EquationRow label="Available" value={money(p.available)} strong />
               {p.expectedIncome > 0 && (
-                <Text variant="caption" color="rgba(255,255,255,0.8)">
+                <Text variant="caption" color={colors.onGradientMuted}>
                   {money(p.expectedIncome)} of expected income isn't counted until it arrives.
                 </Text>
               )}
@@ -267,7 +267,9 @@ function WhereItWent({ s }: { s: PeriodStats }) {
     { key: 'debt', label: 'Debt payments', value: s.debtPayments, color: series[7] },
     { key: 'saved', label: 'To savings', value: Math.max(0, s.toSavings), color: series[2] },
     { key: 'invested', label: 'Invested', value: s.investmentContributions, color: series[6] },
-    { key: 'left', label: 'Not yet used', value: Math.max(0, s.income - used), color: colors.track },
+    // The track colour is the bar's own background: the remainder needs a mark
+    // you can actually see (and a legend dot to match) on either surface.
+    { key: 'left', label: 'Not yet used', value: Math.max(0, s.income - used), color: colors.textTertiary },
   ].filter((x) => x.value > 0);
   return (
     <View style={{ gap: 8 }}>
@@ -446,6 +448,7 @@ export function InvestmentsWidget({ m }: { m: DashboardModel }) {
 export function GoalsWidget({ m }: { m: DashboardModel }) {
   const router = useRouter();
   const money = useMoney();
+  const markColor = useMarkColor();
   return (
     <Section title="Goals" action="All goals" onAction={() => router.push('/goals')}>
       {m.goals.length === 0 ? (
@@ -463,7 +466,7 @@ export function GoalsWidget({ m }: { m: DashboardModel }) {
                 </Text>
                 <GoalStatusBadge progress={g} />
               </View>
-              <ProgressBar value={g.ratio} color={g.goal.color} />
+              <ProgressBar value={g.ratio} color={markColor(g.goal.color)} />
               <Text variant="caption" color={colors.textSecondary}>
                 {money(g.current, { whole: true })} of {money(g.target, { whole: true })}
                 {g.projectedDate && g.status !== 'complete' ? ` · est. ${formatDate(g.projectedDate, 'short', m.today)}` : ''}
@@ -570,9 +573,9 @@ export const WIDGETS: Record<DashboardWidgetId, ComponentType<{ m: DashboardMode
 const styles = StyleSheet.create({
   heroTop: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.md },
   heroChips: { flexDirection: 'row', gap: spacing.sm, flexWrap: 'wrap' },
-  equation: { gap: 6, backgroundColor: 'rgba(12,4,7,0.14)', borderRadius: radius.md, padding: spacing.md },
+  equation: { gap: 6, backgroundColor: colors.gradientScrim, borderRadius: radius.md, padding: spacing.md },
   equationRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  equationRule: { height: 1, backgroundColor: 'rgba(255,255,255,0.35)', marginVertical: 2 },
+  equationRule: { height: 1, backgroundColor: colors.glassBorder, marginVertical: 2 },
   tiles: { flexDirection: 'row', gap: spacing.sm },
   inline: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   inlineBetween: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md },

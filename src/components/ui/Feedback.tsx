@@ -92,7 +92,7 @@ export function StatTile({ label, value, caption, icon, onPress, tone = 'default
     <Card variant={tone === 'muted' ? 'muted' : 'outlined'} onPress={onPress} style={{ flex: 1, gap: 6, minWidth: 96 }} padding={spacing.md} accessibilityLabel={label}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
         {icon && <Feather name={icon} size={13} color={colors.textTertiary} />}
-        <Text variant="small" color={colors.textSecondary} numberOfLines={1} style={{ flex: 1 }}>
+        <Text variant="small" color={colors.textSecondary} numberOfLines={2} style={{ flex: 1 }}>
           {label}
         </Text>
       </View>

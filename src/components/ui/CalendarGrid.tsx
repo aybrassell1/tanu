@@ -65,7 +65,7 @@ export function CalendarGrid({ month, onMonthChange, selected, today, onSelect, 
                 style={styles.cell}
               >
                 <View style={[styles.day, isToday && styles.today, isSelected && styles.selected]}>
-                  <Text variant="small" weight={isSelected || isToday ? 'semibold' : 'regular'} color={isSelected ? colors.onPrimary : inMonth ? colors.ink : colors.borderStrong}>
+                  <Text variant="small" weight={isSelected || isToday ? 'semibold' : 'regular'} color={isSelected ? colors.onPrimary : inMonth ? colors.ink : colors.textTertiary}>
                     {parseISODate(date).day}
                   </Text>
                 </View>

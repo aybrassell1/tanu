@@ -237,6 +237,7 @@ export default function AccountFormScreen() {
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', gap: spacing.sm },
   colors: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  swatch: { width: 34, height: 34, borderRadius: radius.pill, borderWidth: 3, borderColor: colors.surface },
+  // The outline keeps the near-black and near-white swatches visible on both themes.
+  swatch: { width: 34, height: 34, borderRadius: radius.pill, borderWidth: 3, borderColor: colors.surface, boxShadow: `0px 0px 0px 1px ${colors.borderStrong}` },
   swatchActive: { borderColor: colors.primaryMuted, boxShadow: `0px 0px 0px 2px ${colors.primary}` },
 });

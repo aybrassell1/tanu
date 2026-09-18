@@ -33,7 +33,7 @@ import { colors, spacing } from '@/theme/tokens';
 
 import { EntrySheet, statusPill } from './index';
 
-const onGradient = 'rgba(255,255,255,0.85)';
+
 
 /**
  * Caption under the due date. `relativePhrase` falls back to the same short
@@ -110,11 +110,11 @@ export default function SinkingFundDetailScreen() {
           {!!category && <Pill tone="glass" size="sm" label={category.name} />}
         </Row>
         <View style={{ gap: 2 }}>
-          <Text variant="small" color={onGradient}>
+          <Text variant="small" color={colors.onGradientMuted}>
             Reserved in this fund
           </Text>
           <Money cents={status.balance} variant="display" color={colors.onGradient} />
-          <Text variant="small" color={onGradient} tabular>
+          <Text variant="small" color={colors.onGradientMuted} tabular>
             {`of ${money(status.target)} a year`}
           </Text>
         </View>

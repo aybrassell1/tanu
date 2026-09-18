@@ -8,7 +8,7 @@ import { centsToInput, currencySymbol, parseMoney } from '@/domain/money';
 import { normalizeTag } from '@/domain/search';
 import type { Cents, ISODate } from '@/domain/types';
 import { useSettings } from '@/store/hooks';
-import { colors, fonts, radius, spacing } from '@/theme/tokens';
+import { colors, fonts, radius, spacing, tintOf } from '@/theme/tokens';
 
 import { Button } from '../Button';
 import { EmojiIcon } from '../Glyph';
@@ -277,7 +277,7 @@ export function SelectSheet<T extends string>({ visible, onClose, title, options
                   </View>
                 ) : (
                   o.icon && (
-                    <View style={[styles.optionIcon, { backgroundColor: `${o.color ?? colors.primary}1A` }]}>
+                    <View style={[styles.optionIcon, { backgroundColor: tintOf(o.color) }]}>
                       <Feather name={o.icon} size={15} color={o.color ?? colors.primary} />
                     </View>
                   )

@@ -337,9 +337,9 @@ function FilterSheet({ visible, onClose, filters, onChange }: { visible: boolean
 
 const styles = StyleSheet.create({
   searchRow: { flexDirection: 'row', gap: spacing.sm },
-  search: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: spacing.sm, height: 46, paddingHorizontal: spacing.md, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border },
+  search: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: spacing.sm, height: 46, paddingHorizontal: spacing.md, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
   searchInput: { flex: 1, fontFamily: fonts.regular, fontSize: 15, color: colors.ink, height: '100%', outlineStyle: 'none' } as never,
-  filterButton: { flexDirection: 'row', alignItems: 'center', gap: 4, height: 46, minWidth: 46, paddingHorizontal: 13, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border, justifyContent: 'center' },
+  filterButton: { flexDirection: 'row', alignItems: 'center', gap: 4, height: 46, minWidth: 46, paddingHorizontal: 13, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, justifyContent: 'center' },
   filterActive: { backgroundColor: colors.ink, borderColor: colors.ink },
   chips: { gap: spacing.sm },
   wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },

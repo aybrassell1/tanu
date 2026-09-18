@@ -204,7 +204,7 @@ export default function ScenarioScreen() {
 
       <Section title="Results" accessory={<Pill size="sm" tone="projected" icon="trending-up" label="Projected" />}>
         <GradientCard palette="projected" style={{ gap: spacing.sm }}>
-          <Text variant="small" weight="medium" color="rgba(255,255,255,0.85)">
+          <Text variant="small" weight="medium" color={colors.onGradient} style={styles.onGradientMuted}>
             {`Hypothetical · ${h} months`}
           </Text>
           <Text variant="h3" color={colors.onGradient}>
@@ -366,6 +366,8 @@ function ComparisonChart({ title, label, pick, baseline, projected, horizon }: {
 }
 
 const styles = StyleSheet.create({
+  /** Secondary text on a gradient: the same token, one step back. */
+  onGradientMuted: { opacity: 0.85 },
   collapseHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, borderRadius: radius.sm },
   changeRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingVertical: 10 },
   changeMain: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: spacing.md },

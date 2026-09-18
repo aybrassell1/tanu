@@ -10,6 +10,7 @@ import { LockGate } from '@/lib/lock';
 import { useReminderSync } from '@/lib/notifications';
 import { hydrateLedger, useLedgerStore } from '@/store/ledger';
 import { applyTheme } from '@/theme/applyTheme';
+import { LIGHT } from '@/theme/palette';
 import { motion } from '@/theme/motion';
 import { colors } from '@/theme/tokens';
 
@@ -18,6 +19,9 @@ import { colors } from '@/theme/tokens';
  * link into a modal route, a fast refresh) must not replay it.
  */
 let opened = false;
+
+/** The opening screen is brand blue in either theme. */
+const BRAND_BLUE = LIGHT.primary;
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({ Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold });
@@ -44,7 +48,7 @@ export default function RootLayout() {
 
   if (!ready && opening) {
     return (
-      <View style={{ flex: 1, backgroundColor: colors.primary }}>
+      <View style={{ flex: 1, backgroundColor: BRAND_BLUE }}>
         <Splash ready={false} onDone={finishOpening} />
       </View>
     );

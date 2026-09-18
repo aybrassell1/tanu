@@ -10,7 +10,8 @@ export const HEALTH_LABEL: Record<HealthStatus, { label: string; color: string }
   strong: { label: 'Strong', color: statusColors.good },
   okay: { label: 'Okay', color: statusColors.warning },
   weak: { label: 'Needs work', color: statusColors.critical },
-  na: { label: 'No data yet', color: colors.borderStrong },
+  // Muted, but still a visible dot on both surfaces — a border colour is not.
+  na: { label: 'No data yet', color: colors.textTertiary },
 };
 
 export function MetricTile({ metric, compact }: { metric: HealthMetric; compact?: boolean }) {

@@ -115,7 +115,7 @@ export default function SearchScreen() {
 
 const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  search: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: spacing.sm, height: 44, paddingHorizontal: spacing.md, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border },
+  search: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: spacing.sm, height: 44, paddingHorizontal: spacing.md, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
   input: { flex: 1, fontFamily: fonts.regular, fontSize: 15, color: colors.ink, height: '100%', outlineStyle: 'none' } as never,
   wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
 });

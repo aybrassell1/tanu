@@ -64,7 +64,7 @@ export function IncomeSplit({ estimate }: { estimate: TaxEstimate }) {
     { key: 'saved', label: 'Pre-tax savings', value: estimate.preTaxSavings, color: series[2] },
   ].filter((p) => p.value > 0);
   const kept = Math.max(0, gross - parts.reduce((s, p) => s + p.value, 0));
-  const all = [...parts, { key: 'kept', label: 'Yours to keep', value: kept, color: colors.borderStrong }];
+  const all = [...parts, { key: 'kept', label: 'Yours to keep', value: kept, color: colors.textTertiary }];
   return (
     <Card style={{ gap: spacing.md }}>
       <View style={styles.between}>
@@ -93,9 +93,11 @@ export function IncomeSplit({ estimate }: { estimate: TaxEstimate }) {
 const QUARTER_STYLE: Record<QuarterPlan['status'], { label: string; color: string; emoji: string }> = {
   paid: { label: 'Paid', color: statusColors.good, emoji: 'check-mark-button' },
   due_soon: { label: 'Due soon', color: statusColors.warning, emoji: 'hourglass-not-done' },
-  upcoming: { label: 'Upcoming', color: colors.borderStrong, emoji: 'spiral-calendar' },
+  // A border colour is invisible as a mark on either surface, so the two
+  // "nothing to do" states use the muted text step instead.
+  upcoming: { label: 'Upcoming', color: colors.textTertiary, emoji: 'spiral-calendar' },
   missed: { label: 'Missed', color: statusColors.critical, emoji: 'warning' },
-  not_needed: { label: 'Not needed', color: colors.borderStrong, emoji: 'check-mark-button' },
+  not_needed: { label: 'Not needed', color: colors.textTertiary, emoji: 'check-mark-button' },
 };
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];

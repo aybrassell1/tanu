@@ -353,7 +353,7 @@ export default function QuickAddScreen() {
         <Text variant="small" color={colors.textTertiary}>
           {mode === 'balance' ? (balanceAccount ? `Current balance ${money(currentBalance)} · enter new balance` : 'New balance') : 'Amount'}
         </Text>
-        <Text style={[styles.amount, amount === '' && { color: colors.borderStrong }]} numberOfLines={1} adjustsFontSizeToFit accessibilityLabel={`Amount ${amount || '0'}`}>
+        <Text style={[styles.amount, amount === '' && { color: colors.textTertiary }]} numberOfLines={1} adjustsFontSizeToFit accessibilityLabel={`Amount ${amount || '0'}`}>
           {formatMoney(amount === '' ? 0 : cents, { currency: data.settings.currency })}
         </Text>
         {mode === 'balance' && balanceAccount && amount !== '' && (
@@ -583,8 +583,8 @@ const styles = StyleSheet.create({
   group: { gap: spacing.sm },
   wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   row: { flexDirection: 'row', gap: spacing.sm },
-  selector: { flex: 1, borderWidth: 1, borderColor: colors.border, borderRadius: radius.md, paddingHorizontal: spacing.md, paddingVertical: 8, gap: 2 },
-  input: { borderWidth: 1, borderColor: colors.border, borderRadius: radius.md, paddingHorizontal: spacing.md, height: 44, fontFamily: fonts.regular, fontSize: 15, color: colors.ink },
+  selector: { flex: 1, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, borderRadius: radius.md, paddingHorizontal: spacing.md, paddingVertical: 8, gap: 2 },
+  input: { borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, borderRadius: radius.md, paddingHorizontal: spacing.md, height: 44, fontFamily: fonts.regular, fontSize: 15, color: colors.ink },
   footer: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border, paddingHorizontal: spacing.lg, paddingTop: spacing.sm, gap: spacing.sm },
   error: { flexDirection: 'row', alignItems: 'center', gap: 6, justifyContent: 'center' },
   keypad: { flexDirection: 'row', flexWrap: 'wrap' },

@@ -205,6 +205,7 @@ const styles = StyleSheet.create({
   sub: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingVertical: 9, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border },
   wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   iconChoice: { width: 40, height: 40, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center' },
-  swatch: { width: 32, height: 32, borderRadius: radius.pill, borderWidth: 3, borderColor: colors.surface },
+  // The ring keeps a very dark swatch (e.g. near-black) visible on a dark sheet.
+  swatch: { width: 32, height: 32, borderRadius: radius.pill, borderWidth: 3, borderColor: colors.surface, boxShadow: `0px 0px 0px 1px ${colors.borderStrong}` },
   swatchActive: { boxShadow: `0px 0px 0px 2px ${colors.primary}` },
 });

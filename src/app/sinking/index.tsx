@@ -47,7 +47,7 @@ import { useData, useDerived, useMoney, useToday } from '@/store/hooks';
 import { ledger } from '@/store/ledger';
 import { colors, radius, spacing } from '@/theme/tokens';
 
-const onGradient = 'rgba(255,255,255,0.85)';
+
 
 type EntryMode = 'add' | 'use';
 
@@ -105,20 +105,20 @@ export default function SinkingFundsScreen() {
     >
       <GradientCard style={{ gap: spacing.md }}>
         <View style={{ gap: 4 }}>
-          <Text variant="small" weight="medium" color={onGradient}>
+          <Text variant="small" weight="medium" color={colors.onGradientMuted}>
             Reserved for irregular costs
           </Text>
           <Money cents={m.reserved} variant="display" color={colors.onGradient} />
         </View>
         <View style={styles.heroSplit}>
           <View style={{ flex: 1 }}>
-            <Text variant="caption" color={onGradient}>
+            <Text variant="caption" color={colors.onGradientMuted}>
               Plan each month
             </Text>
             <Money cents={m.monthlyPlan} variant="h3" color={colors.onGradient} />
           </View>
           <View style={{ flex: 1 }}>
-            <Text variant="caption" color={onGradient}>
+            <Text variant="caption" color={colors.onGradientMuted}>
               Set aside in {formatMonth(monthOf(today), 'short')}
             </Text>
             <Money cents={m.thisMonth} variant="h3" color={colors.onGradient} />

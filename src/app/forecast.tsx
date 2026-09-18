@@ -136,12 +136,12 @@ export default function ForecastScreen() {
           <View style={styles.tiles}>
             <StatTile label="Today" icon="check-circle" value={<Money cents={f.start} variant="h3" compact tone="balance" />} caption={<Pill label="Actual" tone="muted" size="sm" />} />
             <StatTile
-              label="Lowest point"
+              label="Lowest"
               icon="arrow-down"
               value={<Money cents={f.lowest.balance} variant="h3" compact tone="balance" />}
               caption={<TileCaption text={f.lowest.date === today ? 'Today' : formatDate(f.lowest.date, 'short', today)} />}
             />
-            <StatTile label="End of range" icon="flag" value={<Money cents={f.end} variant="h3" compact tone="balance" />} caption={<TileCaption text={formatDate(to, 'short', today)} />} />
+            <StatTile label="Range end" icon="flag" value={<Money cents={f.end} variant="h3" compact tone="balance" />} caption={<TileCaption text={formatDate(to, 'short', today)} />} />
 
           </View>
 

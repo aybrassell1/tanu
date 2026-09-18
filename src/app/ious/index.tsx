@@ -25,7 +25,7 @@ import { iouAging, iouBalance, iouSummary } from '@/domain/ious';
 import { useData, useDerived, useMoney, useToday } from '@/store/hooks';
 import { colors, spacing } from '@/theme/tokens';
 
-const onGradient = 'rgba(255,255,255,0.85)';
+
 
 export default function IousScreen() {
   const router = useRouter();
@@ -66,11 +66,11 @@ export default function IousScreen() {
     <Screen header={header}>
       <GradientCard style={{ gap: spacing.md }}>
         <View style={{ gap: 2 }}>
-          <Text variant="small" color={onGradient}>
+          <Text variant="small" color={colors.onGradientMuted}>
             Net position
           </Text>
           <Money cents={Math.abs(summary.net)} variant="display" color={colors.onGradient} />
-          <Text variant="small" color={onGradient}>
+          <Text variant="small" color={colors.onGradientMuted}>
             {netLabel}
           </Text>
         </View>

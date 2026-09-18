@@ -27,6 +27,8 @@ export interface Palette {
   onPrimary: string;
   /** Text and icons on a gradient panel: always near-white, in both themes. */
   onGradient: string;
+  /** A step back from onGradient, for labels and captions on a gradient. */
+  onGradientMuted: string;
 
   background: string;
   surface: string;
@@ -49,6 +51,8 @@ export interface Palette {
 
   glass: string;
   glassBorder: string;
+  /** Recessed panel drawn *inside* a gradient card, so text on it still reads. */
+  gradientScrim: string;
   overlay: string;
 
   statusGood: string;
@@ -82,9 +86,10 @@ export const LIGHT: Palette = {
   onInk: '#FFFFFF',
   onInkMuted: 'rgba(255,255,255,0.7)',
   textSecondary: '#5C5C5C',
-  textTertiary: '#858585',
+  textTertiary: '#6E6E6E',
   onPrimary: '#FFFFFF',
   onGradient: '#FFFFFF',
+  onGradientMuted: 'rgba(255,255,255,0.82)',
 
   background: '#FFFFFF',
   surface: '#FFFFFF',
@@ -105,8 +110,9 @@ export const LIGHT: Palette = {
   projected: '#7C3AED',
   projectedSoft: '#F3EEFE',
 
-  glass: 'rgba(255,255,255,0.2)',
-  glassBorder: 'rgba(255,255,255,0.35)',
+  glass: 'rgba(12,4,7,0.34)',
+  glassBorder: 'rgba(255,255,255,0.38)',
+  gradientScrim: 'rgba(12,4,7,0.16)',
   overlay: 'rgba(12,4,7,0.4)',
 
   statusGood: '#0CA30C',
@@ -115,7 +121,7 @@ export const LIGHT: Palette = {
 
   chartGrid: '#EFEFEF',
   chartAxis: '#D6D6D6',
-  chartLabel: '#858585',
+  chartLabel: '#6E6E6E',
   chartComparison: '#C9CED8',
 
   series: ['#2469FE', '#EB6834', '#1BAF7A', '#EDA100', '#E87BA4', '#008300', '#4A3AA7', '#E34948'],
@@ -142,6 +148,7 @@ export const DARK: Palette = {
   textTertiary: '#8A8482',
   onPrimary: '#0B0A0C',
   onGradient: '#FFFFFF',
+  onGradientMuted: 'rgba(255,255,255,0.82)',
 
   background: '#0E0D10',
   surface: '#17161A',
@@ -164,6 +171,7 @@ export const DARK: Palette = {
 
   glass: 'rgba(255,255,255,0.12)',
   glassBorder: 'rgba(255,255,255,0.24)',
+  gradientScrim: 'rgba(0,0,0,0.25)',
   overlay: 'rgba(0,0,0,0.6)',
 
   statusGood: '#3FD07E',

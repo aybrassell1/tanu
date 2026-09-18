@@ -83,9 +83,9 @@ export default function IncomeScreen() {
   return (
     <Screen header={<NavHeader title="Income" right={<IconButton icon="plus" accessibilityLabel="Add income source" onPress={() => router.push('/income/edit')} />} />}>
       <View style={styles.tiles}>
-        <StatTile label="Earned this month" icon="check-circle" value={<Money cents={model.monthToDate.income} variant="h3" compact tone="flow" />} caption="Actual, so far" />
+        <StatTile label="Earned" icon="check-circle" value={<Money cents={model.monthToDate.income} variant="h3" compact tone="flow" />} caption="This month, so far" />
         <StatTile
-          label="Expected this month"
+          label="Expected"
           icon="calendar"
           value={<Money cents={model.expectedMonth} variant="h3" compact />}
           caption={
@@ -99,7 +99,7 @@ export default function IncomeScreen() {
             </View>
           }
         />
-        <StatTile label="Monthly average" icon="bar-chart-2" value={<Money cents={model.average} variant="h3" compact />} caption="Last 6 full months" />
+        <StatTile label="Average" icon="bar-chart-2" value={<Money cents={model.average} variant="h3" compact />} caption="Last 6 full months" />
       </View>
 
       {data.incomeSources.length === 0 ? (

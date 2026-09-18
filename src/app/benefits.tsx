@@ -214,7 +214,8 @@ function MatchCard({ status, onEdit }: { status: MatchStatus; onEdit: () => void
         <SplitBar
           segments={[
             { key: 'earned', value: status.remainingMatch, color: colors.positive },
-            { key: 'missed', value: status.remainingMissed, color: colors.negativeSoft },
+            // A "soft" tint is a background step: as a bar it disappears on both surfaces.
+            { key: 'missed', value: status.remainingMissed, color: colors.textTertiary },
           ]}
         />
         <Row gap={spacing.md}>

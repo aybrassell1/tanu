@@ -32,7 +32,7 @@ import { useData, useMoney, useToday } from '@/store/hooks';
 import { ledger } from '@/store/ledger';
 import { colors, spacing } from '@/theme/tokens';
 
-const onGradient = 'rgba(255,255,255,0.85)';
+
 
 export default function IouDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -96,18 +96,18 @@ export default function IouDetailScreen() {
           {overdue && <Pill tone="glass" size="sm" icon="alert-circle" label="Overdue" />}
         </Row>
         <View style={{ gap: 2 }}>
-          <Text variant="small" color={onGradient}>
+          <Text variant="small" color={colors.onGradientMuted}>
             {balance.settled ? 'Settled in full' : incoming ? 'Still owed to you' : 'You still owe'}
           </Text>
           <Money cents={balance.settled ? balance.amount : balance.outstanding} variant="display" color={colors.onGradient} />
-          <Text variant="small" color={onGradient} tabular>
+          <Text variant="small" color={colors.onGradientMuted} tabular>
             {/* Only the verb is lowercased; the person's name stays exactly as entered. */}
             {balance.repaid > 0
               ? `${money(balance.repaid)} of ${money(balance.amount)} repaid`
               : `${money(balance.amount)} ${incoming ? 'lent to' : 'borrowed from'} ${iou.person}`}
           </Text>
         </View>
-        {balance.repaid > 0 && !balance.settled && <ProgressBar value={balance.ratio} color={colors.onGradient} accessibilityLabel={`${Math.round(balance.ratio * 100)}% repaid`} />}
+        {balance.repaid > 0 && !balance.settled && <ProgressBar value={balance.ratio} color={colors.onGradientMuted} accessibilityLabel={`${Math.round(balance.ratio * 100)}% repaid`} />}
       </GradientCard>
 
       {!balance.settled && (

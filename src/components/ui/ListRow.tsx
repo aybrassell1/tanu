@@ -3,7 +3,7 @@ import { Children, Fragment, isValidElement, type ReactNode } from 'react';
 import { Animated, Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import type { IconName } from '@/data/icons';
-import { colors, spacing } from '@/theme/tokens';
+import { colors, spacing, tintOf } from '@/theme/tokens';
 import { Card } from './Card';
 import { Text } from './Text';
 import { usePressScale } from '@/theme/motion';
@@ -14,7 +14,7 @@ type IconTileProps = { icon: IconName; color?: string; size?: number; tint?: str
 /** Icon inside a softly tinted rounded square. */
 export function IconTile({ icon, color = colors.primary, size = 40, tint }: IconTileProps) {
   return (
-    <View style={[styles.tile, { width: size, height: size, borderRadius: size * 0.3, backgroundColor: tint ?? `${color}1A` }]}>
+    <View style={[styles.tile, { width: size, height: size, borderRadius: size * 0.3, backgroundColor: tint ?? tintOf(color) }]}>
       <Feather name={icon} size={Math.round(size * 0.44)} color={color} />
     </View>
   );

@@ -15,7 +15,7 @@ export function PathHero({ projection }: { projection: RetirementProjection }) {
         <Pill label="Projected" tone="glass" size="sm" icon="trending-up" />
       </Row>
       <View style={{ gap: 4 }}>
-        <Text variant="small" color="rgba(255,255,255,0.85)">
+        <Text variant="small" color={colors.onGradient} style={styles.onGradientMuted}>
           On this path you reach
         </Text>
         <Text variant="display" color={colors.onGradient} tabular>
@@ -25,7 +25,7 @@ export function PathHero({ projection }: { projection: RetirementProjection }) {
           {projection.years > 0 ? `by ${end.year}, at age ${end.age}` : `today, at age ${end.age}`}
         </Text>
       </View>
-      <Text variant="small" color="rgba(255,255,255,0.85)">
+      <Text variant="small" color={colors.onGradient} style={styles.onGradientMuted}>
         {`About ${money(end.real, { compact: true, whole: true })} in today's dollars, or ${money(projection.income.real, { whole: true })} a year at a ${projection.assumptions.withdrawalRate}% withdrawal rate.`}
       </Text>
     </GradientCard>
@@ -123,5 +123,7 @@ export function FiProgress({ fi }: { fi: FiNumbers }) {
 }
 
 const styles = StyleSheet.create({
+  /** Secondary text on a gradient: the same token, one step back. */
+  onGradientMuted: { opacity: 0.85 },
   tiles: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
 });

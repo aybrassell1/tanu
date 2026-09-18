@@ -7,7 +7,7 @@ import { EmojiIcon } from '@/components/ui/Glyph';
 import type { AffordabilityCheck, AffordabilityResult, FinancialSnapshot, Verdict } from '@/domain/affordability';
 import { formatPercent } from '@/domain/money';
 import { useMoney } from '@/store/hooks';
-import { chart, colors, radius, series, spacing, status } from '@/theme/tokens';
+import { colors, radius, series, spacing, status } from '@/theme/tokens';
 
 export const VERDICT: Record<Verdict, { label: string; emoji: string; tone: 'positive' | 'primary' | 'warning' | 'negative'; color: string }> = {
   comfortable: { label: 'Comfortable', emoji: 'check-mark-button', tone: 'positive', color: colors.positive },
@@ -46,7 +46,9 @@ export function BudgetBar({ result, snapshot }: { result: AffordabilityResult; s
   const money = useMoney();
   const short = result.newSurplus < 0;
   const segments = [
-    { key: 'spending', label: 'Everyday spending', value: result.budget.spending, color: chart.comparison },
+    // The comparison grey is a chart-furniture step; as the biggest segment of
+    // this bar it needs to be a mark you can actually see on either surface.
+    { key: 'spending', label: 'Everyday spending', value: result.budget.spending, color: colors.textTertiary },
     { key: 'debts', label: 'Debt payments', value: result.budget.debts, color: series[1] },
     { key: 'new', label: 'This purchase', value: result.budget.newCost, color: series[0] },
     { key: 'left', label: 'Left over', value: result.budget.leftover, color: status.good },

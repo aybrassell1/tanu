@@ -332,7 +332,9 @@ function PurchaseCalculator({ s }: { s: FinancialSnapshot }) {
 function Mini({ label, value }: { label: string; value: string }) {
   return (
     <Card variant="muted" padding={spacing.md} style={{ flex: 1, gap: 2 }}>
-      <Text variant="caption" color={colors.textSecondary} numberOfLines={1}>
+      {/* Three tiles across a 390px phone leave ~85px: labels like "Months of
+          take-home" and "Lifetime interest" have to wrap rather than clip. */}
+      <Text variant="caption" color={colors.textSecondary} numberOfLines={2}>
         {label}
       </Text>
       <Text variant="h3" tabular numberOfLines={1} adjustsFontSizeToFit>

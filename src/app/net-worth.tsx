@@ -199,7 +199,7 @@ export default function NetWorthScreen() {
     <Screen header={header}>
       <GradientCard style={{ gap: spacing.md }}>
         <View style={{ gap: 4 }}>
-          <Text variant="small" weight="medium" color="rgba(255,255,255,0.85)">
+          <Text variant="small" weight="medium" color={colors.onGradientMuted}>
             Net worth today
           </Text>
           <Money cents={now.netWorth} variant="display" color={colors.onGradient} />

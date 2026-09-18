@@ -39,6 +39,7 @@ export const colors = {
   onPrimary: token('onPrimary'),
   /** Text on a gradient panel. */
   onGradient: token('onGradient'),
+  onGradientMuted: token('onGradientMuted'),
 
   background: token('background'),
   surface: token('surface'),
@@ -64,6 +65,8 @@ export const colors = {
 
   glass: token('glass'),
   glassBorder: token('glassBorder'),
+  /** Recessed panel inside a gradient card. */
+  gradientScrim: token('gradientScrim'),
   overlay: token('overlay'),
 } as const;
 
@@ -139,3 +142,14 @@ export type TypographyVariant = keyof typeof typography;
 
 /** Bottom padding scroll views need so content clears the floating tab bar. */
 export const TAB_BAR_CLEARANCE = 120;
+
+/**
+ * A soft tint of a saved colour (a category, an account) for use behind an
+ * icon. On the web it mixes with the current surface, so the same category
+ * reads the same way in either theme; native falls back to a fixed alpha.
+ */
+export function tintOf(color: string | undefined, strength = 0.18): string {
+  const base = color ?? colors.primary;
+  if (!web) return `${base}${Math.round(strength * 255).toString(16).padStart(2, '0')}`;
+  return `color-mix(in srgb, ${base} ${Math.round(strength * 100)}%, ${colors.surface})`;
+}

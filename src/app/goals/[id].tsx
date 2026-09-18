@@ -34,8 +34,6 @@ import { useData, useMoney, useToday } from '@/store/hooks';
 import { ledger } from '@/store/ledger';
 import { colors, series as seriesColors, spacing } from '@/theme/tokens';
 
-const onGradient = 'rgba(255,255,255,0.85)';
-
 export default function GoalDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
@@ -100,11 +98,11 @@ export default function GoalDetailScreen() {
           {goal.completedAt && <Pill tone="glass" size="sm" icon="check" label="Completed" />}
         </Row>
         <View style={{ gap: 2 }}>
-          <Text variant="small" color={onGradient}>
+          <Text variant="small" color={colors.onGradientMuted}>
             {isDebt ? 'Paid off so far' : goal.kind === 'net_worth' ? 'Net worth now' : goal.kind === 'investment' ? 'Value now' : 'Saved so far'}
           </Text>
           <Money cents={p.current} variant="display" color={colors.onGradient} />
-          <Text variant="small" color={onGradient} tabular>
+          <Text variant="small" color={colors.onGradientMuted} tabular>
             {`of ${money(p.target)}`}
           </Text>
         </View>
@@ -119,7 +117,7 @@ export default function GoalDetailScreen() {
         <Row gap={spacing.sm} style={{ alignItems: 'stretch' }}>
           <StatTile label="Monthly pace" icon="activity" value={<Money cents={p.monthlyRate} variant="h3" compact />} caption={diffDays(p.goal.startDate, today) < 90 ? 'Average since the goal started' : 'Average, last 3 months incl. this month'} />
           <StatTile
-            label="Projected completion"
+            label="Projected finish"
             icon="trending-up"
             value={<Text variant="h3">{p.status === 'complete' ? 'Done' : p.projectedDate ? formatMonth(monthOf(p.projectedDate)) : '—'}</Text>}
             caption={p.status === 'complete' ? 'Target reached' : p.projectedDate ? 'Projected at current pace' : 'Not enough recent progress'}

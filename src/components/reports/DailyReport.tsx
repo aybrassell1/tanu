@@ -12,8 +12,13 @@ import { colors, radius, series, spacing } from '@/theme/tokens';
 
 import { ChartCard, Takeaway, useAxisMoney } from './shared';
 
-/** Sequential blue ramp (validated reference steps), light → dark. */
-const RAMP = ['#EEF3FB', '#CDE2FB', '#9EC5F4', '#6DA7EC', '#3987E5', '#256ABF', '#184F95'];
+/**
+ * Sequential ramp: one hue laid over the card at increasing strength, so the
+ * steps are mixed with whichever surface is underneath and read the right way
+ * round in both themes. The top step stops short of full so the day number
+ * stays legible on it.
+ */
+const RAMP = [0, 0.12, 0.24, 0.36, 0.5, 0.62, 0.75];
 
 export function DailyReport() {
   const data = useData();
@@ -91,9 +96,10 @@ export function DailyReport() {
                     onPress={() => setSelected(isSel ? null : date)}
                     accessibilityRole="button"
                     accessibilityLabel={`${formatDate(date, 'weekday', today)}: ${money(amount)}`}
-                    style={[styles.cell, { backgroundColor: RAMP[level(amount)] }, isSel && styles.cellSelected]}
+                    style={[styles.cell, styles.cellIn, isSel && styles.cellSelected]}
                   >
-                    <Text variant="caption" color={level(amount) >= 4 ? colors.onPrimary : colors.textSecondary}>
+                    <Heat level={level(amount)} />
+                    <Text variant="caption" color={amount > 0 ? colors.ink : colors.textSecondary}>
                       {parseISODate(date).day}
                     </Text>
                   </Pressable>
@@ -108,8 +114,10 @@ export function DailyReport() {
           <Text variant="caption" color={colors.textTertiary}>
             Less
           </Text>
-          {RAMP.map((c) => (
-            <View key={c} style={[styles.swatch, { backgroundColor: c }]} />
+          {RAMP.map((_, i) => (
+            <View key={i} style={[styles.swatch, styles.cellIn]}>
+              <Heat level={i} />
+            </View>
           ))}
           <Text variant="caption" color={colors.textTertiary}>
             More
@@ -143,6 +151,12 @@ export function DailyReport() {
   );
 }
 
+/** One step of the ramp, painted over the cell so it blends with the surface. */
+function Heat({ level }: { level: number }) {
+  if (!RAMP[level]) return null;
+  return <View style={[StyleSheet.absoluteFill, styles.heat, { opacity: RAMP[level] }]} />;
+}
+
 function dayOfWeekOffset(date: ISODate, weekStartsOn: 0 | 1) {
   return (dayOfWeek(date) - weekStartsOn + 7) % 7;
 }
@@ -168,7 +182,9 @@ const styles = StyleSheet.create({
   grid: { flexDirection: 'row', flexWrap: 'wrap' },
   cellWrap: { width: `${100 / 7}%`, padding: 2 },
   cell: { aspectRatio: 1, borderRadius: radius.sm, alignItems: 'center', justifyContent: 'center' },
+  cellIn: { backgroundColor: colors.surfaceSunken, overflow: 'hidden' },
   cellSelected: { borderWidth: 2, borderColor: colors.ink },
+  heat: { backgroundColor: series[0] },
   legend: { flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: spacing.sm },
   swatch: { width: 12, height: 12, borderRadius: 3 },
 });

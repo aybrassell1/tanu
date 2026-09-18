@@ -62,9 +62,9 @@ export default function BillsScreen() {
   return (
     <Screen header={<NavHeader title="Bills & recurring" right={<IconButton icon="plus" accessibilityLabel="Add recurring payment" onPress={add} />} />}>
       <View style={styles.tiles}>
-        <StatTile label="Monthly obligations" icon="file-text" value={<Money cents={model.monthly} variant="h3" whole />} caption="Bills, subscriptions, debt" />
-        <StatTile label="Next 30 days" icon="calendar" value={<Money cents={model.next30} variant="h3" whole />} caption={model.next30Overdue ? 'Expected · incl. past due' : 'Expected'} />
-        <StatTile label="On autopay" icon="zap" value={`${model.autopay} of ${model.active.length}`} caption="Active items" />
+        <StatTile label="Monthly" icon="file-text" value={<Money cents={model.monthly} variant="h3" whole />} caption="All recurring" />
+        <StatTile label="Next 30d" icon="calendar" value={<Money cents={model.next30} variant="h3" whole />} caption={model.next30Overdue ? 'Expected · incl. past due' : 'Expected'} />
+        <StatTile label="Autopay" icon="zap" value={`${model.autopay} of ${model.active.length}`} caption="Active items" />
       </View>
 
       <Segmented

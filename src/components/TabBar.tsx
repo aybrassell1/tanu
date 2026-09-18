@@ -72,7 +72,7 @@ function QuickAddButton({ onPress }: { onPress: () => void }) {
         {...press.handlers}
         style={({ pressed }) => [styles.add, pressed && { opacity: 0.9 }]}
       >
-        <Feather name="plus" size={24} color={colors.onPrimary} />
+        <Feather name="plus" size={24} color={colors.onInk} />
       </Pressable>
     </Animated.View>
   );
@@ -86,7 +86,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderRadius: radius.xl,
     borderWidth: 1,
-    borderColor: colors.border,
+    // The float shadow does almost nothing on a dark background, so the edge
+    // itself has to say the bar is floating above the page.
+    borderColor: colors.borderStrong,
     paddingHorizontal: 8,
     paddingVertical: 8,
     boxShadow: shadows.float,

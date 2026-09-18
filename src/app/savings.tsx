@@ -18,7 +18,7 @@ import type { Account, Goal } from '@/domain/types';
 import { useDerived, useMoney, usePercent, useToday } from '@/store/hooks';
 import { colors, radius, series as seriesColors, spacing } from '@/theme/tokens';
 
-const onGradient = 'rgba(255,255,255,0.85)';
+
 const pct = (ratio: number) => `${Math.round(ratio * 100)}%`;
 
 export default function SavingsScreen() {
@@ -68,28 +68,28 @@ export default function SavingsScreen() {
     <Screen header={<NavHeader title="Savings" />}>
       <GradientCard style={{ gap: spacing.md }}>
         <View style={{ gap: 4 }}>
-          <Text variant="small" weight="medium" color={onGradient}>
+          <Text variant="small" weight="medium" color={colors.onGradientMuted}>
             In savings accounts
           </Text>
           <Money cents={m.total} variant="display" color={colors.onGradient} />
         </View>
         <View style={styles.heroSplit}>
           <View style={{ flex: 1 }}>
-            <Text variant="caption" color={onGradient}>
+            <Text variant="caption" color={colors.onGradientMuted}>
               Assigned to goals
             </Text>
             <Money cents={m.assigned} variant="h3" color={colors.onGradient} />
           </View>
           {m.reservedInSavings > 0 && (
             <View style={{ flex: 1 }}>
-              <Text variant="caption" color={onGradient}>
+              <Text variant="caption" color={colors.onGradientMuted}>
                 Reserved for costs
               </Text>
               <Money cents={m.reservedInSavings} variant="h3" color={colors.onGradient} />
             </View>
           )}
           <View style={{ flex: 1 }}>
-            <Text variant="caption" color={onGradient}>
+            <Text variant="caption" color={colors.onGradientMuted}>
               Not assigned or reserved
             </Text>
             <Money cents={unassigned} variant="h3" color={colors.onGradient} />

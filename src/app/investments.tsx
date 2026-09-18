@@ -86,16 +86,20 @@ export default function InvestmentsScreen() {
         </Text>
       </Card>
 
-      <View style={styles.tiles}>
-        <StatTile
-          label="Contributed this year"
-          icon="arrow-down-left"
-          value={<Money cents={model.activity.contributions} variant="h3" compact />}
-          caption={model.activity.payroll > 0 ? `includes ${money(model.activity.payroll, { whole: true })} from payroll` : undefined}
-        />
-        <StatTile label="Withdrawn this year" icon="arrow-up-right" value={<Money cents={model.activity.withdrawals} variant="h3" compact />} />
-        <StatTile label="Dividends & interest this year" icon="percent" value={<Money cents={model.activity.income} variant="h3" compact />} caption="paid out by your investments" />
-      </View>
+      {/* A tile is a third of a phone screen wide and its label is a single
+          clipped line, so the period belongs in the section heading. */}
+      <Section title="This year">
+        <View style={styles.tiles}>
+          <StatTile
+            label="Contributed"
+            icon="arrow-down-left"
+            value={<Money cents={model.activity.contributions} variant="h3" compact />}
+            caption={model.activity.payroll > 0 ? `Includes ${money(model.activity.payroll, { whole: true })} from payroll` : undefined}
+          />
+          <StatTile label="Withdrawn" icon="arrow-up-right" value={<Money cents={model.activity.withdrawals} variant="h3" compact />} />
+          <StatTile label="Dividends" icon="percent" value={<Money cents={model.activity.income} variant="h3" compact />} caption="& interest paid out" />
+        </View>
+      </Section>
 
       <View style={{ gap: spacing.md }}>
         <Row gap={spacing.sm} style={{ flexWrap: 'wrap' }}>

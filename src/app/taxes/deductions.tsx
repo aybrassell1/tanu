@@ -162,7 +162,9 @@ function Mileage({ year }: { year: number }) {
             <Text variant="h3" tabular numberOfLines={1}>
               {Number(p.miles.toFixed(1)).toLocaleString()} mi
             </Text>
-            <Text variant="caption" color={colors.textSecondary} numberOfLines={1}>
+            {/* Three tiles on a 390px phone: let the caption wrap rather than
+                clip the deduction value off the end. */}
+            <Text variant="caption" color={colors.textSecondary} numberOfLines={2}>
               {p.label} · {money(p.value$, { whole: true })}
             </Text>
           </Card>

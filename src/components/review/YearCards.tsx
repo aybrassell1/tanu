@@ -21,7 +21,7 @@ export function HeadlineCard({ review }: { review: YearReview }) {
         <Pill label={review.isPartial ? `${review.year} so far` : String(review.year)} tone="glass" size="sm" icon="calendar" />
       </Row>
       <View style={{ gap: 4 }}>
-        <Text variant="small" color="rgba(255,255,255,0.85)">
+        <Text variant="small" color={colors.onGradient} style={styles.onGradientMuted}>
           You kept
         </Text>
         <Text variant="display" color={colors.onGradient} tabular>
@@ -43,7 +43,7 @@ export function HeadlineCard({ review }: { review: YearReview }) {
 function HeroFigure({ label, value }: { label: string; value: string }) {
   return (
     <View style={{ flex: 1, gap: 2 }}>
-      <Text variant="caption" color="rgba(255,255,255,0.8)">
+      <Text variant="caption" color={colors.onGradient} style={styles.onGradientMuted}>
         {label.toUpperCase()}
       </Text>
       <Text variant="h3" color={colors.onGradient} tabular numberOfLines={1}>
@@ -166,6 +166,8 @@ export function PurchaseNote({ date, description, today }: { date: string; descr
 }
 
 const styles = StyleSheet.create({
+  /** Secondary text on a gradient: the same token, one step back. */
+  onGradientMuted: { opacity: 0.85 },
   heroSplit: { flexDirection: 'row', gap: spacing.md, borderTopWidth: 1, borderTopColor: colors.glassBorder, paddingTop: spacing.md },
   tiles: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   years: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },

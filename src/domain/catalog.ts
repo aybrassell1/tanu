@@ -151,7 +151,7 @@ export const ASSET_TYPES: Record<AssetType, { label: string; icon: string }> = {
 /** Palette for accounts, categories and goals. Muted so numbers stay readable. */
 export const ENTITY_COLORS = [
   '#2469FE',
-  '#0C0407',
+  '#475569',
   '#16A34A',
   '#F59E0B',
   '#E5484D',

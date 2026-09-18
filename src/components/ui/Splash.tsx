@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Animated, Image, Platform, StyleSheet, View, type ViewStyle } from 'react-native';
 
+import { LIGHT } from '@/theme/palette';
 import { colors } from '@/theme/tokens';
 import { easing, motion, useReducedMotion } from '@/theme/motion';
 
@@ -15,6 +16,9 @@ const MARK = require('../../../assets/brand/tanu-mark-white.png');
  * iOS paints the status-bar area of a home-screen app with the page theme
  * colour, so the opening screen borrows it and hands it back on the way out.
  */
+/** The opening screen always wears the brand blue, whatever the theme. */
+const BRAND = LIGHT.primary;
+
 function setStatusBarColor(color: string) {
   if (Platform.OS !== 'web') return;
   const doc = (globalThis as { document?: Document }).document;
@@ -29,7 +33,7 @@ export function Splash({ ready, onDone }: { ready: boolean; onDone: () => void }
   const [shownAt] = useState(() => Date.now());
 
   useEffect(() => {
-    setStatusBarColor(colors.primary);
+    setStatusBarColor(BRAND);
     return () => setStatusBarColor(colors.background);
   }, []);
 
@@ -85,7 +89,7 @@ export function Splash({ ready, onDone }: { ready: boolean; onDone: () => void }
 }
 
 const styles = StyleSheet.create({
-  fill: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: colors.primary, zIndex: 10 },
+  fill: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: BRAND, zIndex: 10 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   mark: { width: 132, height: 132 },
 });

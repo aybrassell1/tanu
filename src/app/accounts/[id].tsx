@@ -2,7 +2,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import { EventRow, TransactionRow } from '@/components/finance/Rows';
+import { EventRow, TransactionRow, useMarkColor } from '@/components/finance/Rows';
 import { Banner, Button, Card, DateField, EmptyState, IconButton, IconTile, KeyValue, LineChart, ListCard, Money, MoneyField, NavHeader, Pill, ProgressBar, Row, Screen, Section, Segmented, Sheet, Stack, StatTile, Text, TextField, useOverlay, VisualTile } from '@/components/ui';
 import { ACCOUNT_EMOJI } from '@/data/visuals';
 import { icon } from '@/data/icons';
@@ -26,6 +26,7 @@ export default function AccountDetailScreen() {
   const today = useToday();
   const money = useMoney();
   const { confirm, toast } = useOverlay();
+  const markColor = useMarkColor();
   const [range, setRange] = useState<Range>('6m');
   const [updating, setUpdating] = useState(false);
   const [txLimit, setTxLimit] = useState(40);
@@ -155,7 +156,7 @@ export default function AccountDetailScreen() {
         <Card>
           <LineChart
             accessibilityLabel={`${account.name} balance history`}
-            series={[{ key: 'balance', label: liability ? 'Owed' : 'Balance', color: account.color === colors.ink ? colors.primary : account.color, area: true, points: model.series.map((y, i) => ({ x: i, y })) }]}
+            series={[{ key: 'balance', label: liability ? 'Owed' : 'Balance', color: markColor(account.color), area: true, points: model.series.map((y, i) => ({ x: i, y })) }]}
             formatY={(v) => money(v, { compact: true, whole: true })}
             formatX={(i) => formatDate(model.dates[Math.round(i)] ?? today, 'short', today)}
             xTicks={[...new Set([0, Math.floor((model.dates.length - 1) / 2), model.dates.length - 1])]}
