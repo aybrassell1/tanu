@@ -1,0 +1,45 @@
+{
+  "expo": {
+    "name": "Tanu",
+    "slug": "tanu",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#FFFFFF",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      "expo-sharing",
+      [
+        "expo-notifications",
+        {
+          "color": "#2469FE",
+          "defaultChannel": "reminders"
+        }
+      ],
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Tanu uses Face ID to unlock your finances on this device."
+        }
+      ]
+    ],
+    "scheme": "tanu"
+  }
+}
