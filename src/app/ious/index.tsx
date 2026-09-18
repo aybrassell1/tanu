@@ -69,7 +69,7 @@ export default function IousScreen() {
           <Text variant="small" color={onGradient}>
             Net position
           </Text>
-          <Money cents={Math.abs(summary.net)} variant="display" color={colors.onPrimary} />
+          <Money cents={Math.abs(summary.net)} variant="display" color={colors.onGradient} />
           <Text variant="small" color={onGradient}>
             {netLabel}
           </Text>

@@ -113,7 +113,7 @@ export default function SinkingFundDetailScreen() {
           <Text variant="small" color={onGradient}>
             Reserved in this fund
           </Text>
-          <Money cents={status.balance} variant="display" color={colors.onPrimary} />
+          <Money cents={status.balance} variant="display" color={colors.onGradient} />
           <Text variant="small" color={onGradient} tabular>
             {`of ${money(status.target)} a year`}
           </Text>

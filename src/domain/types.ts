@@ -660,8 +660,12 @@ export interface NotificationSettings {
   lowBalance?: Cents;
 }
 
+export type ThemeChoice = 'system' | 'light' | 'dark';
+
 export interface Settings {
   currency: string;
+  /** Which palette to use; 'system' follows the device. */
+  theme: ThemeChoice;
   weekStartsOn: 0 | 1;
   /** Cash kept aside when computing available-to-spend. */
   spendingBuffer: Cents;

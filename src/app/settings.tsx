@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
 
 import {
   Banner,
@@ -27,6 +27,7 @@ import { SCHEMA_VERSION } from '@/domain/factory';
 import { exportTextFile, pickTextFile } from '@/store/fileIO';
 import { useData, useSettings } from '@/store/hooks';
 import { ledger } from '@/store/ledger';
+import { applyTheme } from '@/theme/applyTheme';
 import { storageDescription } from '@/store/storage';
 import { colors, spacing } from '@/theme/tokens';
 
@@ -149,6 +150,20 @@ export default function SettingsScreen() {
 
       <Section title="Preferences">
         <Stack gap={spacing.lg}>
+          <Field label="Appearance" hint={Platform.OS === 'web' ? undefined : 'Reopen the app to change theme on this device.'}>
+            <Segmented
+              items={[
+                { value: 'system', label: 'System' },
+                { value: 'light', label: 'Light' },
+                { value: 'dark', label: 'Dark' },
+              ]}
+              value={settings.theme ?? 'system'}
+              onChange={(theme) => {
+                ledger.updateSettings({ theme });
+                applyTheme(theme);
+              }}
+            />
+          </Field>
           <SelectField label="Currency" value={settings.currency} onChange={(currency) => ledger.updateSettings({ currency })} options={CURRENCIES} hint="Changes how amounts are displayed. Existing amounts are not converted." />
           <Field label="Weeks start on">
             <Segmented items={[{ value: '0', label: 'Sunday' }, { value: '1', label: 'Monday' }]} value={String(settings.weekStartsOn) as '0' | '1'} onChange={(v) => ledger.updateSettings({ weekStartsOn: v === '1' ? 1 : 0 })} />

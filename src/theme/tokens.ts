@@ -1,70 +1,89 @@
+import { Appearance, Platform } from 'react-native';
+
+import { DARK, LIGHT, type Palette } from './palette';
+
 /**
  * Design tokens. Visual language borrowed from the Deltex Webflow template:
  * Inter, a single saturated blue, blue→sky gradient hero cards, soft grey
  * surfaces, generous radii, pill badges and tightly tracked headlines.
  * Financial screens stay calm: color is reserved for meaning.
+ *
+ * Theming: on the web every token is a CSS variable, so switching theme
+ * repaints instantly without re-rendering anything. Native can't do that, so
+ * it resolves the device's scheme once at startup. Either way the rest of the
+ * app keeps reading `colors.x` and never needs to know which theme is on.
  */
 
+const web = Platform.OS === 'web';
+/** Native only: the palette picked at launch. */
+export const nativePalette: Palette = web ? LIGHT : Appearance.getColorScheme() === 'dark' ? DARK : LIGHT;
+
+const token = (key: keyof Palette): string => (web ? `var(--c-${key.replace(/[A-Z]/g, (c) => '-' + c.toLowerCase())})` : (nativePalette[key] as string));
+const list = (key: 'series' | 'gradientHero' | 'gradientSoft' | 'gradientProjected', index: number): string =>
+  web ? `var(--c-${key.replace(/[A-Z]/g, (c) => '-' + c.toLowerCase())}-${index})` : (nativePalette[key] as string[])[index];
+
 export const colors = {
-  primary: '#2469FE',
-  primaryPressed: '#1C58DB',
-  primarySoft: '#EAF1FF',
-  primaryMuted: '#BCD3FF',
+  primary: token('primary'),
+  primaryPressed: token('primaryPressed'),
+  primarySoft: token('primarySoft'),
+  primaryMuted: token('primaryMuted'),
 
-  ink: '#0C0407',
-  textSecondary: '#5C5C5C',
-  /** 3.7:1 on white; for captions and axis labels. */
-  textTertiary: '#858585',
-  onPrimary: '#FFFFFF',
+  ink: token('ink'),
+  textSecondary: token('textSecondary'),
+  /** Captions and axis labels; 4.5:1 on its own surface in both themes. */
+  textTertiary: token('textTertiary'),
+  onPrimary: token('onPrimary'),
+  /** Text on a gradient panel. */
+  onGradient: token('onGradient'),
 
-  background: '#FFFFFF',
-  surface: '#FFFFFF',
-  surfaceMuted: '#F7F7F7',
-  surfaceSunken: '#F0F0F0',
-  track: '#EDEDED',
-  border: '#E8E8E8',
-  borderStrong: '#D6D6D6',
+  background: token('background'),
+  surface: token('surface'),
+  surfaceMuted: token('surfaceMuted'),
+  surfaceSunken: token('surfaceSunken'),
+  track: token('track'),
+  border: token('border'),
+  borderStrong: token('borderStrong'),
 
-  star: '#FCB823',
+  star: token('star'),
 
   /** Money in / good status. Text-safe step. */
-  positive: '#15803D',
-  positiveSoft: '#E8F6EC',
+  positive: token('positive'),
+  positiveSoft: token('positiveSoft'),
   /** Money out / critical status. */
-  negative: '#C92A2A',
-  negativeSoft: '#FDECEC',
-  warning: '#B45309',
-  warningSoft: '#FEF3E2',
+  negative: token('negative'),
+  negativeSoft: token('negativeSoft'),
+  warning: token('warning'),
+  warningSoft: token('warningSoft'),
   /** Projection / hypothetical accents. */
-  projected: '#7C3AED',
-  projectedSoft: '#F3EEFE',
+  projected: token('projected'),
+  projectedSoft: token('projectedSoft'),
 
-  glass: 'rgba(255,255,255,0.2)',
-  glassBorder: 'rgba(255,255,255,0.35)',
-  overlay: 'rgba(12,4,7,0.4)',
+  glass: token('glass'),
+  glassBorder: token('glassBorder'),
+  overlay: token('overlay'),
 } as const;
 
 /** Status marks (icons, dots, bars). Always paired with an icon or label. */
 export const status = {
-  good: '#0CA30C',
-  warning: '#FAB219',
-  critical: '#D03B3B',
+  good: token('statusGood'),
+  warning: token('statusWarning'),
+  critical: token('statusCritical'),
 } as const;
 
-/** Validated categorical order (dataviz validator, light surface #FFFFFF). */
-export const series = ['#2469FE', '#EB6834', '#1BAF7A', '#EDA100', '#E87BA4', '#008300', '#4A3AA7', '#E34948'] as const;
+/** Validated categorical order (dataviz validator, against each theme's surface). */
+export const series = [list('series', 0), list('series', 1), list('series', 2), list('series', 3), list('series', 4), list('series', 5), list('series', 6), list('series', 7)] as const;
 
 export const chart = {
-  grid: '#EFEFEF',
-  axis: '#D6D6D6',
-  label: '#858585',
-  comparison: '#C9CED8',
+  grid: token('chartGrid'),
+  axis: token('chartAxis'),
+  label: token('chartLabel'),
+  comparison: token('chartComparison'),
 } as const;
 
 export const gradients = {
-  hero: ['#2469FE', '#5A95FC', '#A9D5FB'],
-  soft: ['#EAF1FF', '#F7FBFF'],
-  projected: ['#6D28D9', '#8B5CF6', '#C4B5FD'],
+  hero: [list('gradientHero', 0), list('gradientHero', 1), list('gradientHero', 2)],
+  soft: [list('gradientSoft', 0), list('gradientSoft', 1)],
+  projected: [list('gradientProjected', 0), list('gradientProjected', 1), list('gradientProjected', 2)],
 } as const;
 
 export const radius = {
@@ -87,8 +106,8 @@ export const spacing = {
 } as const;
 
 export const shadows = {
-  card: '0px 1px 2px rgba(12,4,7,0.04), 0px 8px 24px rgba(12,4,7,0.06)',
-  float: '0px 12px 32px rgba(12,4,7,0.14)',
+  card: token('shadowCard'),
+  float: token('shadowFloat'),
 } as const;
 
 export const fonts = {

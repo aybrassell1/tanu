@@ -9,6 +9,7 @@ import { Splash } from '@/components/ui/Splash';
 import { LockGate } from '@/lib/lock';
 import { useReminderSync } from '@/lib/notifications';
 import { hydrateLedger, useLedgerStore } from '@/store/ledger';
+import { applyTheme } from '@/theme/applyTheme';
 import { motion } from '@/theme/motion';
 import { colors } from '@/theme/tokens';
 
@@ -19,9 +20,16 @@ export default function RootLayout() {
   const [opening, setOpening] = useState(true);
   const ready = fontsLoaded && hydrated;
 
+  const theme = useLedgerStore((s) => s.data.settings.theme);
+
   useEffect(() => {
     void hydrateLedger();
   }, []);
+
+  // The chosen palette is part of the data, so it follows a restore or import.
+  useEffect(() => {
+    if (!opening) applyTheme(theme ?? 'system');
+  }, [opening, theme]);
 
   if (!ready && opening) {
     return (

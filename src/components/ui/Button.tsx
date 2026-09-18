@@ -80,7 +80,7 @@ export function IconButton({ icon, onPress, variant = 'light', size = 40, access
   const palette = {
     light: { bg: colors.surface, border: colors.border, fg: colors.ink },
     dark: { bg: colors.ink, border: colors.ink, fg: colors.onPrimary },
-    glass: { bg: colors.glass, border: colors.glassBorder, fg: colors.onPrimary },
+    glass: { bg: colors.glass, border: colors.glassBorder, fg: colors.onGradient },
     plain: { bg: 'transparent', border: 'transparent', fg: colors.ink },
     primary: { bg: colors.primary, border: colors.primary, fg: colors.onPrimary },
   }[variant];

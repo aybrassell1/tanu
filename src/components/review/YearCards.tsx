@@ -24,10 +24,10 @@ export function HeadlineCard({ review }: { review: YearReview }) {
         <Text variant="small" color="rgba(255,255,255,0.85)">
           You kept
         </Text>
-        <Text variant="display" color={colors.onPrimary} tabular>
+        <Text variant="display" color={colors.onGradient} tabular>
           {money(s.saved, { compact: true, whole: true })}
         </Text>
-        <Text variant="h3" weight="medium" color={colors.onPrimary}>
+        <Text variant="h3" weight="medium" color={colors.onGradient}>
           {s.income > 0 ? `${percent(s.savingsRate)} of everything you earned` : 'No income recorded this year'}
         </Text>
       </View>
@@ -46,7 +46,7 @@ function HeroFigure({ label, value }: { label: string; value: string }) {
       <Text variant="caption" color="rgba(255,255,255,0.8)">
         {label.toUpperCase()}
       </Text>
-      <Text variant="h3" color={colors.onPrimary} tabular numberOfLines={1}>
+      <Text variant="h3" color={colors.onGradient} tabular numberOfLines={1}>
         {value}
       </Text>
     </View>

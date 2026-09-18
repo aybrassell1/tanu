@@ -18,10 +18,10 @@ export function PathHero({ projection }: { projection: RetirementProjection }) {
         <Text variant="small" color="rgba(255,255,255,0.85)">
           On this path you reach
         </Text>
-        <Text variant="display" color={colors.onPrimary} tabular>
+        <Text variant="display" color={colors.onGradient} tabular>
           {money(end.nominal, { compact: true, whole: true })}
         </Text>
-        <Text variant="h3" weight="medium" color={colors.onPrimary}>
+        <Text variant="h3" weight="medium" color={colors.onGradient}>
           {projection.years > 0 ? `by ${end.year}, at age ${end.age}` : `today, at age ${end.age}`}
         </Text>
       </View>

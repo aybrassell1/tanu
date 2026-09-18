@@ -207,7 +207,7 @@ export default function ScenarioScreen() {
           <Text variant="small" weight="medium" color="rgba(255,255,255,0.85)">
             {`Hypothetical · ${h} months`}
           </Text>
-          <Text variant="h3" color={colors.onPrimary}>
+          <Text variant="h3" color={colors.onGradient}>
             {summarySentence(scenario.changes.length, h, baseline, projected, debtFree, (c) => money(c, { whole: true }))}
           </Text>
         </GradientCard>

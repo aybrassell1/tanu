@@ -29,7 +29,7 @@ export default function WelcomeScreen() {
           <View style={styles.logo}>
             <Image source={require('../../assets/brand/tanu-mark.png')} style={styles.mark} resizeMode="contain" accessibilityLabel="Tanu logo" />
           </View>
-          <Text variant="display" color={colors.onPrimary}>
+          <Text variant="display" color={colors.onGradient}>
             Tanu
           </Text>
         </View>
@@ -67,7 +67,7 @@ export default function WelcomeScreen() {
 
 const styles = StyleSheet.create({
   brand: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
-  logo: { width: 64, height: 64, borderRadius: 20, backgroundColor: colors.onPrimary, alignItems: 'center', justifyContent: 'center' },
+  logo: { width: 64, height: 64, borderRadius: 20, backgroundColor: colors.onGradient, alignItems: 'center', justifyContent: 'center' },
   mark: { width: 48, height: 48 },
   point: { flexDirection: 'row', gap: spacing.md, alignItems: 'flex-start' },
   icon: { width: 40, height: 40, borderRadius: 12, backgroundColor: colors.primarySoft, alignItems: 'center', justifyContent: 'center' },

@@ -103,7 +103,7 @@ export default function GoalDetailScreen() {
           <Text variant="small" color={onGradient}>
             {isDebt ? 'Paid off so far' : goal.kind === 'net_worth' ? 'Net worth now' : goal.kind === 'investment' ? 'Value now' : 'Saved so far'}
           </Text>
-          <Money cents={p.current} variant="display" color={colors.onPrimary} />
+          <Money cents={p.current} variant="display" color={colors.onGradient} />
           <Text variant="small" color={onGradient} tabular>
             {`of ${money(p.target)}`}
           </Text>

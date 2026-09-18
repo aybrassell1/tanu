@@ -202,8 +202,8 @@ export default function NetWorthScreen() {
           <Text variant="small" weight="medium" color="rgba(255,255,255,0.85)">
             Net worth today
           </Text>
-          <Money cents={now.netWorth} variant="display" color={colors.onPrimary} />
-          <ChangeLabel cents={change} pct={changePct} suffix={phrase} color={colors.onPrimary} />
+          <Money cents={now.netWorth} variant="display" color={colors.onGradient} />
+          <ChangeLabel cents={change} pct={changePct} suffix={phrase} color={colors.onGradient} />
         </View>
         <Segmented items={RANGES} value={range} onChange={setRange} size="sm" />
       </GradientCard>

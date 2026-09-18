@@ -105,7 +105,7 @@ export function OverviewWidget({ m }: { m: DashboardModel }) {
               <Text variant="small" weight="medium" color="rgba(255,255,255,0.85)">
                 Available to spend
               </Text>
-              <Money cents={p.available} variant="display" color={colors.onPrimary} />
+              <Money cents={p.available} variant="display" color={colors.onGradient} />
               <Text variant="small" color="rgba(255,255,255,0.85)">
                 {p.horizonReason === 'payday' ? `Until payday ${formatDate(p.horizon, 'weekday', m.today)}` : `Through ${formatDate(p.horizon, 'short', m.today)}`}
               </Text>
@@ -147,10 +147,10 @@ export function OverviewWidget({ m }: { m: DashboardModel }) {
 function EquationRow({ label, value, strong }: { label: string; value: string; strong?: boolean }) {
   return (
     <View style={styles.equationRow}>
-      <Text variant="small" color={colors.onPrimary} weight={strong ? 'semibold' : 'regular'} style={{ flex: 1 }}>
+      <Text variant="small" color={colors.onGradient} weight={strong ? 'semibold' : 'regular'} style={{ flex: 1 }}>
         {label}
       </Text>
-      <Text variant="small" color={colors.onPrimary} weight={strong ? 'semibold' : 'medium'} tabular>
+      <Text variant="small" color={colors.onGradient} weight={strong ? 'semibold' : 'medium'} tabular>
         {value}
       </Text>
     </View>

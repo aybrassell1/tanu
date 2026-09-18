@@ -59,33 +59,33 @@ export default function BenefitsScreen() {
         <GradientCard style={{ gap: spacing.md }}>
           <Row gap={spacing.sm}>
             <EmojiIcon name={overview.sources.length === 0 ? 'briefcase' : overview.onTrack ? 'party-popper' : 'money-with-wings'} size={28} />
-            <Text variant="small" weight="medium" color={colors.onPrimary} style={{ flex: 1 }}>
+            <Text variant="small" weight="medium" color={colors.onGradient} style={{ flex: 1 }}>
               {overview.sources.length === 0 ? 'Employer match' : `Free money, ${year}`}
             </Text>
             {overview.sources.length > 0 && <Pill tone="glass" size="sm" label="Projected" icon="trending-up" />}
           </Row>
           {overview.sources.length === 0 ? (
             <>
-              <Text variant="h2" color={colors.onPrimary}>
+              <Text variant="h2" color={colors.onGradient}>
                 No match set up yet
               </Text>
-              <Text variant="small" color={colors.onPrimary}>
+              <Text variant="small" color={colors.onGradient}>
                 Add what your employer matches below and this turns into real numbers.
               </Text>
             </>
           ) : overview.onTrack ? (
             <>
-              <Text variant="h1" color={colors.onPrimary}>
+              <Text variant="h1" color={colors.onGradient}>
                 You&apos;re on track
               </Text>
-              <Text variant="small" color={colors.onPrimary}>
+              <Text variant="small" color={colors.onGradient}>
                 On course to collect the whole match by 31 December.
               </Text>
             </>
           ) : (
             <>
-              <Money cents={overview.projectedMissed} variant="display" color={colors.onPrimary} />
-              <Text variant="small" color={colors.onPrimary}>
+              <Money cents={overview.projectedMissed} variant="display" color={colors.onGradient} />
+              <Text variant="small" color={colors.onGradient}>
                 of employer match goes unclaimed this year if nothing changes.
               </Text>
             </>
@@ -94,19 +94,19 @@ export default function BenefitsScreen() {
             <>
               <SplitBar
                 segments={[
-                  { key: 'earned', value: overview.projectedMatch, color: colors.onPrimary },
+                  { key: 'earned', value: overview.projectedMatch, color: colors.onGradient },
                   { key: 'missed', value: overview.projectedMissed, color: colors.glassBorder },
                 ]}
                 height={10}
               />
               <Row gap={spacing.md}>
-                <Text variant="caption" color={colors.onPrimary} style={{ flex: 1 }}>
+                <Text variant="caption" color={colors.onGradient} style={{ flex: 1 }}>
                   {`${formatPercent(claimed)} of the year's match claimed`}
                 </Text>
-                <Text variant="caption" color={colors.onPrimary}>
+                <Text variant="caption" color={colors.onGradient}>
                   Banked so far
                 </Text>
-                <Money cents={overview.matchEarnedYtd} variant="caption" weight="semibold" color={colors.onPrimary} />
+                <Money cents={overview.matchEarnedYtd} variant="caption" weight="semibold" color={colors.onGradient} />
               </Row>
             </>
           )}

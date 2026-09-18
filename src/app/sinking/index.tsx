@@ -108,20 +108,20 @@ export default function SinkingFundsScreen() {
           <Text variant="small" weight="medium" color={onGradient}>
             Reserved for irregular costs
           </Text>
-          <Money cents={m.reserved} variant="display" color={colors.onPrimary} />
+          <Money cents={m.reserved} variant="display" color={colors.onGradient} />
         </View>
         <View style={styles.heroSplit}>
           <View style={{ flex: 1 }}>
             <Text variant="caption" color={onGradient}>
               Plan each month
             </Text>
-            <Money cents={m.monthlyPlan} variant="h3" color={colors.onPrimary} />
+            <Money cents={m.monthlyPlan} variant="h3" color={colors.onGradient} />
           </View>
           <View style={{ flex: 1 }}>
             <Text variant="caption" color={onGradient}>
               Set aside in {formatMonth(monthOf(today), 'short')}
             </Text>
-            <Money cents={m.thisMonth} variant="h3" color={colors.onPrimary} />
+            <Money cents={m.thisMonth} variant="h3" color={colors.onGradient} />
           </View>
         </View>
         <View style={styles.heroNote}>

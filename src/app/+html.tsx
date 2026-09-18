@@ -1,4 +1,6 @@
 import { ScrollViewStyleReset } from 'expo-router/html';
+
+import { themeCss } from '@/theme/palette';
 import type { ReactNode } from 'react';
 
 /**
@@ -33,6 +35,7 @@ export default function Root({ children }: { children: ReactNode }) {
 
         <ScrollViewStyleReset />
         <script dangerouslySetInnerHTML={{ __html: SERVICE_WORKER }} />
+        <style dangerouslySetInnerHTML={{ __html: themeCss() }} />
         <style dangerouslySetInnerHTML={{ __html: BODY }} />
       </head>
       <body>{children}</body>
@@ -51,7 +54,9 @@ const SERVICE_WORKER = `
 `;
 
 const BODY = `
-  body { background-color: #FFFFFF; overscroll-behavior-y: none; }
-  /* The app draws its own surfaces; keep the shell neutral in either theme. */
-  @media (prefers-color-scheme: dark) { body { background-color: #FFFFFF; } }
+  body { background-color: var(--c-background); overscroll-behavior-y: none; }
+  /* Form controls and scrollbars follow the theme too. */
+  :root { color-scheme: light; }
+  [data-theme='dark'] { color-scheme: dark; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme='light']) { color-scheme: dark; } }
 `;

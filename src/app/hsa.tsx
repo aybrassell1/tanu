@@ -121,12 +121,12 @@ export default function HsaScreen() {
       <GradientCard style={{ gap: spacing.md }}>
         <Row gap={spacing.sm}>
           <EmojiIcon name="medical-symbol" size={28} />
-          <Text variant="small" weight="medium" color={colors.onPrimary} style={{ flex: 1 }}>
+          <Text variant="small" weight="medium" color={colors.onGradient} style={{ flex: 1 }}>
             Money you can still claim back
           </Text>
         </Row>
-        <Money cents={summary.totals.outstanding} variant="display" color={colors.onPrimary} />
-        <Text variant="small" color={colors.onPrimary}>
+        <Money cents={summary.totals.outstanding} variant="display" color={colors.onGradient} />
+        <Text variant="small" color={colors.onGradient}>
           {summary.counts.open + summary.counts.flagged === 0
             ? 'No out-of-pocket medical costs waiting.'
             : `${summary.counts.open + summary.counts.flagged} medical ${summary.counts.open + summary.counts.flagged === 1 ? 'cost' : 'costs'} paid out of pocket · ${money(summary.totals.reimbursed)} already reimbursed`}
@@ -135,16 +135,16 @@ export default function HsaScreen() {
           <>
             <SplitBar
               segments={[
-                { key: 'covered', value: Math.min(summary.hsaBalance, summary.totals.outstanding), color: colors.onPrimary },
+                { key: 'covered', value: Math.min(summary.hsaBalance, summary.totals.outstanding), color: colors.onGradient },
                 { key: 'short', value: Math.max(0, summary.totals.outstanding - summary.hsaBalance), color: colors.glassBorder },
               ]}
               height={10}
             />
             <Row gap={spacing.sm}>
-              <Text variant="caption" color={colors.onPrimary} style={{ flex: 1 }}>
+              <Text variant="caption" color={colors.onGradient} style={{ flex: 1 }}>
                 {`HSA balance ${money(summary.hsaBalance)}`}
               </Text>
-              <Text variant="caption" color={colors.onPrimary}>
+              <Text variant="caption" color={colors.onGradient}>
                 {`covers ${formatPercent(summary.coverage)} of the claims`}
               </Text>
             </Row>

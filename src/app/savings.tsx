@@ -71,28 +71,28 @@ export default function SavingsScreen() {
           <Text variant="small" weight="medium" color={onGradient}>
             In savings accounts
           </Text>
-          <Money cents={m.total} variant="display" color={colors.onPrimary} />
+          <Money cents={m.total} variant="display" color={colors.onGradient} />
         </View>
         <View style={styles.heroSplit}>
           <View style={{ flex: 1 }}>
             <Text variant="caption" color={onGradient}>
               Assigned to goals
             </Text>
-            <Money cents={m.assigned} variant="h3" color={colors.onPrimary} />
+            <Money cents={m.assigned} variant="h3" color={colors.onGradient} />
           </View>
           {m.reservedInSavings > 0 && (
             <View style={{ flex: 1 }}>
               <Text variant="caption" color={onGradient}>
                 Reserved for costs
               </Text>
-              <Money cents={m.reservedInSavings} variant="h3" color={colors.onPrimary} />
+              <Money cents={m.reservedInSavings} variant="h3" color={colors.onGradient} />
             </View>
           )}
           <View style={{ flex: 1 }}>
             <Text variant="caption" color={onGradient}>
               Not assigned or reserved
             </Text>
-            <Money cents={unassigned} variant="h3" color={colors.onPrimary} />
+            <Money cents={unassigned} variant="h3" color={colors.onGradient} />
           </View>
         </View>
         <View style={styles.heroNote}>

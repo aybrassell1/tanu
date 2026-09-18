@@ -99,7 +99,7 @@ export default function IouDetailScreen() {
           <Text variant="small" color={onGradient}>
             {balance.settled ? 'Settled in full' : incoming ? 'Still owed to you' : 'You still owe'}
           </Text>
-          <Money cents={balance.settled ? balance.amount : balance.outstanding} variant="display" color={colors.onPrimary} />
+          <Money cents={balance.settled ? balance.amount : balance.outstanding} variant="display" color={colors.onGradient} />
           <Text variant="small" color={onGradient} tabular>
             {/* Only the verb is lowercased; the person's name stays exactly as entered. */}
             {balance.repaid > 0
@@ -107,7 +107,7 @@ export default function IouDetailScreen() {
               : `${money(balance.amount)} ${incoming ? 'lent to' : 'borrowed from'} ${iou.person}`}
           </Text>
         </View>
-        {balance.repaid > 0 && !balance.settled && <ProgressBar value={balance.ratio} color={colors.onPrimary} accessibilityLabel={`${Math.round(balance.ratio * 100)}% repaid`} />}
+        {balance.repaid > 0 && !balance.settled && <ProgressBar value={balance.ratio} color={colors.onGradient} accessibilityLabel={`${Math.round(balance.ratio * 100)}% repaid`} />}
       </GradientCard>
 
       {!balance.settled && (

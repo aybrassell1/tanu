@@ -35,6 +35,7 @@ export function defaultSettings(): Settings {
     weekStartsOn: 0,
     spendingBuffer: 0,
     investmentReturn: 5,
+    theme: 'system',
     hideAmounts: false,
     security: { lock: false, lockAfterMinutes: 5 },
     notifications: { enabled: false, billsDaysBefore: 2, hour: 9, paydays: false, weeklyReview: false },
