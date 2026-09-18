@@ -16,9 +16,9 @@ const POINTS: { icon: IconName; title: string; body: string }[] = [
 export default function WelcomeScreen() {
   const router = useRouter();
   const start = (sample: boolean) => {
+    // Setup marks onboarding complete once it finishes, so a half-done setup can be resumed.
     if (sample) ledger.loadSampleData();
-    else ledger.completeOnboarding();
-    router.replace(sample ? '/' : '/accounts/edit');
+    router.replace(sample ? '/' : '/setup');
   };
 
   return (

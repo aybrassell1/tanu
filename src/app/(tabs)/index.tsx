@@ -17,6 +17,7 @@ import { balanceOn, indexLedger, investmentInfo } from '@/domain/ledger';
 import { sum } from '@/domain/money';
 import { monthEndDates, moneyMap, netWorthTrend, overallUtilization, periodHasData } from '@/domain/position';
 import { periodStats } from '@/domain/reports';
+import { setupStatus } from '@/domain/setup';
 import { openEvents } from '@/domain/schedule';
 import { useData, useMoney, useSettings, useToday } from '@/store/hooks';
 import { ledger, useLedgerStore } from '@/store/ledger';
@@ -92,6 +93,8 @@ export default function HomeScreen() {
   // Widgets added in later versions appear for existing users too.
   const widgets = [...order, ...DEFAULT_DASHBOARD.filter((id) => !order.includes(id))].filter((id) => !hidden.includes(id) && id in WIDGETS);
 
+  const setup = setupStatus(data);
+
   return (
     <Screen tabBar>
       <Row>
@@ -114,6 +117,16 @@ export default function HomeScreen() {
           title="You're exploring sample data"
           message="Numbers here are made up. Erase them when you're ready to add your own."
           action={<Button label="Start fresh" size="sm" variant="secondary" onPress={() => router.push('/settings')} />}
+        />
+      )}
+
+      {!data.meta.isSample && setup.missing.length > 0 && model.hasAccounts && (
+        <Banner
+          tone="primary"
+          icon="check-circle"
+          title={`Finish setting up · ${Math.round(setup.progress * 4)} of 4`}
+          message={setup.missing[0].label}
+          action={<Button label="Continue" size="sm" onPress={() => router.push(setup.missing[0].href as never)} />}
         />
       )}
 
