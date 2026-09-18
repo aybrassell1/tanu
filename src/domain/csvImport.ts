@@ -17,7 +17,11 @@ import { accountNature } from './catalog';
 import { categoryPath } from './categories';
 import { daysInMonth, diffDays, isValidISODate, toISODate } from './dates';
 import { indexLedger } from './ledger';
-import type { Cents, ID, ISODate, LedgerData, Transaction, TransactionType } from './types';
+import { categoryFor, merchantProfiles } from './merchants';
+import { merchantKey, normalizeDescription, similarDescription } from './merchantText';
+import type { Cents, CategoryKind, ID, ISODate, LedgerData, Transaction, TransactionType } from './types';
+
+export { merchantKey, normalizeDescription, similarDescription } from './merchantText';
 
 // ─── 1. The grid ─────────────────────────────────────────────────────────────
 
@@ -206,46 +210,6 @@ export function parseAmount(raw: string): Cents | null {
   const cents = frac.length <= 2 ? Number(whole) * 100 + Number(frac.padEnd(2, '0')) : Math.round(Number(s) * 100);
   if (!Number.isFinite(cents)) return null;
   return negative && cents !== 0 ? -cents : cents;
-}
-
-/** Lowercase letters and digits only, for comparing two descriptions. */
-export function normalizeDescription(raw: string): string {
-  return (raw ?? '')
-    .toLowerCase()
-    // Apostrophes vanish rather than split, so "joe's" and "joes" agree.
-    .replace(/['’`]/g, '')
-    .replace(/[^a-z0-9]+/g, ' ')
-    .trim();
-}
-
-const NOISE_WORDS = new Set(['pos', 'debit', 'credit', 'card', 'purchase', 'authorized', 'on', 'recurring', 'ach', 'web', 'ppd', 'des', 'ref', 'id', 'xxxx', 'x', 'checkcard', 'sq', 'tst', 'py', 'pp', 'usa', 'us']);
-
-/**
- * A stable merchant fingerprint: "SQ *TRADER JOE'S #482 SAN FRA 01/14" and
- * "TRADER JOES #117" both reduce to "trader joes".
- */
-export function merchantKey(raw: string): string {
-  const tokens: string[] = [];
-  for (const token of normalizeDescription(raw).split(' ')) {
-    if (!token || /^\d+$/.test(token) || NOISE_WORDS.has(token)) continue;
-    // A stray single letter is the tail of the word before it ("joe s" → "joes").
-    if (token.length === 1 && tokens.length) tokens[tokens.length - 1] += token;
-    else tokens.push(token);
-  }
-  return tokens.slice(0, 4).join(' ');
-}
-
-/** True when two statement descriptions plausibly name the same purchase. */
-export function similarDescription(a: string, b: string): boolean {
-  const na = normalizeDescription(a);
-  const nb = normalizeDescription(b);
-  if (!na || !nb) return false;
-  if (na === nb) return true;
-  const ka = merchantKey(a);
-  const kb = merchantKey(b);
-  if (ka && ka === kb) return true;
-  const [short, long] = na.length <= nb.length ? [na, nb] : [nb, na];
-  return short.length >= 6 && long.includes(short);
 }
 
 // ─── 3. Mapping ──────────────────────────────────────────────────────────────
@@ -498,7 +462,7 @@ export function parseRows(rows: string[][], mapping: ColumnMapping, options: Par
   const account = data?.accounts.find((a) => a.id === accountId);
   const liability = account ? accountNature(account.type) === 'liability' : false;
   const categoryLookup = data ? buildCategoryLookup(data) : new Map<string, { id: ID; kind: string }>();
-  const learned = data && autoCategorize ? learnCategories(data) : new Map<string, ID>();
+  const learned = data && autoCategorize ? learnCategories(data) : () => undefined;
   const existing = data ? existingCandidates(data, accountId) : [];
 
   for (const [i, raw] of rows.entries()) {
@@ -558,7 +522,7 @@ export function parseRows(rows: string[][], mapping: ColumnMapping, options: Par
       draft.categoryId = matched.id;
       draft.categorySource = 'file';
     } else if (autoCategorize) {
-      const guess = learned.get(`${wanted}|${merchantKey(description)}`);
+      const guess = learned(merchantKey(description), wanted);
       if (guess) {
         draft.categoryId = guess;
         draft.categorySource = 'learned';
@@ -615,42 +579,13 @@ function buildCategoryLookup(data: LedgerData) {
   return map;
 }
 
-const MIN_SAMPLES = 2;
-const MIN_SHARE = 0.6;
-
 /**
- * The category you have used most for each merchant, kept only when it is a
- * clear habit: at least two past transactions and 60% agreement.
+ * The category you have used most for each merchant, for the kind of category
+ * this row wants. `merchants.ts` decides what counts as a habit.
  */
-function learnCategories(data: LedgerData): Map<string, ID> {
-  const tally = new Map<string, Map<ID, number>>();
-  const kinds = new Map(data.categories.map((c) => [c.id, c.kind]));
-  for (const t of data.transactions) {
-    if (!t.categoryId) continue;
-    const kind = kinds.get(t.categoryId);
-    if (!kind) continue;
-    const key = merchantKey(t.payee || t.description);
-    if (!key) continue;
-    const bucket = `${kind}|${key}`;
-    const counts = tally.get(bucket) ?? new Map<ID, number>();
-    counts.set(t.categoryId, (counts.get(t.categoryId) ?? 0) + 1);
-    tally.set(bucket, counts);
-  }
-  const out = new Map<string, ID>();
-  for (const [bucket, counts] of tally) {
-    let topId: ID | undefined;
-    let top = 0;
-    let total = 0;
-    for (const [id, n] of counts) {
-      total += n;
-      if (n > top) {
-        top = n;
-        topId = id;
-      }
-    }
-    if (topId && total >= MIN_SAMPLES && top / total >= MIN_SHARE) out.set(bucket, topId);
-  }
-  return out;
+function learnCategories(data: LedgerData): (key: string, kind: CategoryKind) => ID | undefined {
+  const profiles = merchantProfiles(data);
+  return (key, kind) => categoryFor(profiles.get(key), kind);
 }
 
 // ─── Duplicates ──────────────────────────────────────────────────────────────

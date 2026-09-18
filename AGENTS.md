@@ -11,7 +11,7 @@ Commands: `npm run typecheck`, `npm test` (vitest, domain logic), `npm run web`.
 ## Architecture
 
 - `src/domain/` — pure, framework-free financial logic. **All money is integer cents; all dates are `YYYY-MM-DD` strings.** Never do money math in screens that the domain already provides.
-  - `types.ts` data model · `catalog.ts` enum metadata (labels/icons) · `ledger.ts` postings, balances, classification · `schedule.ts` scheduled events (bills, paychecks, debt due dates) · `position.ts` net worth + available-to-spend · `reports.ts` period stats & monthly review · `budgets.ts` · `goals.ts` · `debt.ts` (summary + payoff simulation) · `forecast.ts` · `scenarios.ts` · `alerts.ts` · `search.ts` · `validation.ts` · `backup.ts` · `sample.ts`.
+  - `types.ts` data model · `catalog.ts` enum metadata (labels/icons) · `ledger.ts` postings, balances, classification · `schedule.ts` scheduled events (bills, paychecks, debt due dates) · `position.ts` net worth + available-to-spend · `reports.ts` period stats & monthly review · `budgets.ts` · `goals.ts` · `debt.ts` (summary + payoff simulation) · `forecast.ts` · `scenarios.ts` · `alerts.ts` · `search.ts` · `validation.ts` · `backup.ts` · `sample.ts` · `merchantText.ts` (statement text → merchant fingerprint) · `merchants.ts` (what you usually do with a merchant).
 - `src/store/ledger.ts` — the single zustand store. Mutate **only** through `ledger.*` actions; they validate and return `Result` (`{ ok: true, id } | { ok: false, errors }`). Destructive actions are undoable via `ledger.undo()`.
 - `src/store/hooks.ts` — `useData()`, `useToday()`, `useSettings()`, `useMoney()` (formatter honoring currency + privacy mode), `useDerived(fn)`.
 - `src/components/ui/` — design system (import from `@/components/ui`). `src/components/finance/` — shared finance rows (`TransactionRow`, `EventRow`, `AccountRow`, `DateBadge`) and pickers (`AccountSelect`, `CategorySelect`, `FrequencySelect`, `MonthSwitcher`, `accountOptions`, `categoryOptions`).
@@ -45,6 +45,12 @@ Commands: `npm run typecheck`, `npm test` (vitest, domain logic), `npm run web`.
 - Tax records live in `data.taxYears` (documents, adjustments, mileage) and `data.taxProfile`; change them only through the store's tax actions.
 - Every default category has an emoji in `data/visuals.ts`; add one when adding a category and run `npm run build:icons`.
 - `domain/coverage.ts` (Spending map) lists irregular costs by category id; keep ids in sync with `defaultCategories.ts`.
+
+## Suggestions from your own history
+
+- `domain/merchants.ts` is the one place that learns habits from past transactions: `merchantProfiles`, `suggestFor`, `categoryFor`, plus the tidy-up queue (`needsCategory`, `groupNeedsCategory`). Quick add, the CSV importer and `/tidy` all read it, so a suggestion never depends on which screen asked.
+- A habit needs at least 2 past transactions with 60% agreement. Splits and archived categories are never learned from, and money in is kept apart from money out.
+- Suggestions are defaults, never decisions: filling a field is fine, writing to the ledger without the user is not. Bulk filing goes through `ledger.categorizeTransactions` so it is a single undo.
 
 ## Splits & side ledgers
 

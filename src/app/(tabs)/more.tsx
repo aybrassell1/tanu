@@ -53,6 +53,7 @@ const GROUPS: { title: string; links: Link[] }[] = [
       { title: 'Insurance & warranties', subtitle: 'Renewals, claims and cover', icon: 'shield', href: '/policies' },
       { title: 'IOUs', subtitle: 'Money lent to or borrowed from people', icon: 'users', href: '/ious' },
       { title: 'Categories', subtitle: 'Spending and income categories', icon: 'tag', href: '/categories' },
+      { title: 'Tidy up', subtitle: 'File transactions that have no category', icon: 'check-square', href: '/tidy' },
       { title: 'Settings & data', subtitle: 'Backup, import and privacy', icon: 'settings', href: '/settings' },
     ],
   },

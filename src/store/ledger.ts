@@ -188,6 +188,26 @@ export const ledger = {
     return ledger.saveTransaction({ ...rest, date, attachments: [] });
   },
 
+  /**
+   * Files several transactions at once, from the tidy-up queue. One commit, so
+   * accepting twenty suggestions is a single undo away from where you were.
+   */
+  categorizeTransactions(assignments: { id: ID; categoryId: ID }[]): Result<number> {
+    const data = get();
+    const wanted = new Map(assignments.map((a) => [a.id, a.categoryId]));
+    const kinds = new Map(data.categories.map((c) => [c.id, c.kind]));
+    let count = 0;
+    const transactions = data.transactions.map((t) => {
+      const categoryId = wanted.get(t.id);
+      if (!categoryId || !kinds.has(categoryId)) return t;
+      count += 1;
+      return { ...t, categoryId, updatedAt: nowStamp() };
+    });
+    if (!count) return ok(0);
+    commit((d) => ({ ...d, transactions }), count === 1 ? 'Category set' : `${count} categories set`);
+    return ok(count);
+  },
+
   saveFavorite(fav: Omit<FavoriteTransaction, 'id'> & { id?: ID }) {
     const same = get().favorites.find(
       (f) => f.id !== fav.id && f.type === fav.type && f.label === fav.label && f.amount === fav.amount && f.categoryId === fav.categoryId && f.accountId === fav.accountId && f.toAccountId === fav.toAccountId,

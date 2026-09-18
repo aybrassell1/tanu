@@ -3,6 +3,7 @@ import { addDays, diffDays, formatDate, monthOf, relativePhrase } from './dates'
 import { buildForecast } from './forecast';
 import { allocationsByAccount, goalProgress } from './goals';
 import { balanceOn, indexLedger, creditInfo } from './ledger';
+import { needsCategory, tidySummary } from './merchants';
 import { formatMoney } from './money';
 import { detectPriceChanges, priceChangeAlerts } from './priceChanges';
 import { monthBudgets } from './budgets';
@@ -166,6 +167,19 @@ export function buildAlerts(data: LedgerData, today: ISODate, format?: (cents: n
       title: `${fund.name} needs ${money(status.shortfall)} more`,
       detail: status.overdue ? `Due ${formatDate(fund.dueDate!)}` : `Due ${relativePhrase(fund.dueDate!, today)} · ${money(status.requiredMonthly ?? status.monthly)}/mo to get there`,
       href: '/sinking',
+    });
+  }
+
+  // Uncategorised money is money the reports and budgets can't explain.
+  const tidy = tidySummary(needsCategory(data));
+  if (tidy.total >= 3) {
+    alerts.push({
+      id: 'tidy:uncategorized',
+      severity: 'info',
+      icon: 'tag',
+      title: `${tidy.total} transactions have no category`,
+      detail: tidy.suggested > 0 ? `${tidy.suggested} can be filed from your own history` : 'Reports and budgets leave them out',
+      href: '/tidy',
     });
   }
 

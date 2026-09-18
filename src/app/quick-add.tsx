@@ -12,6 +12,7 @@ import { accountNature, isCreditCard, isDebt, isInvestment } from '@/domain/cata
 import { categoryPath } from '@/domain/categories';
 import { addDays, diffDays, formatDate, relativeDay } from '@/domain/dates';
 import { balanceOn, indexLedger } from '@/domain/ledger';
+import { merchantProfiles, suggestFor } from '@/domain/merchants';
 import { centsToInput, formatMoney } from '@/domain/money';
 import { openEvents, primaryCashAccount, type ScheduledEvent } from '@/domain/schedule';
 import type { Cents, ID, ISODate, LedgerData, TransactionType } from '@/domain/types';
@@ -138,6 +139,7 @@ export default function QuickAddScreen() {
   const [sourceId, setSourceId] = useState<ID | undefined>(data.incomeSources.some((x) => x.id === params.sourceId) ? params.sourceId : undefined);
   const [link, setLink] = useState<ScheduledEvent | null>(null);
   const [linkOn, setLinkOn] = useState(true);
+  const [chosenByHand, setChosenByHand] = useState(false);
   const [picker, setPicker] = useState<'category' | 'account' | 'to' | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -164,6 +166,7 @@ export default function QuickAddScreen() {
   useEffect(() => {
     setError(null);
     setLink(null);
+    setChosenByHand(false);
     // A category from the other side (income vs spending) doesn't carry over.
     const wantKind = mode === 'income' ? 'income' : mode === 'expense' ? 'expense' : null;
     if (wantKind) setCategoryId((c) => (c && index.categories.get(c)?.kind === wantKind ? c : undefined));
@@ -178,6 +181,24 @@ export default function QuickAddScreen() {
   }, [mode]);
 
   const upcoming = useMemo(() => openEvents(data, today, addDays(today, 10), 20), [data, today]);
+
+  // What you usually do with this merchant. Suggestions only, and only until
+  // you answer for yourself.
+  const profiles = useMemo(() => merchantProfiles(data), [data]);
+  const recognized = useMemo(
+    () => (mode === 'expense' && payee.trim().length >= 3 ? suggestFor(data, payee, 'expense', profiles) : null),
+    [data, mode, payee, profiles],
+  );
+  const filledFromHistory = !chosenByHand && !!recognized?.categoryId && categoryId === recognized.categoryId;
+
+  useEffect(() => {
+    if (chosenByHand || mode !== 'expense') return;
+    const guess = recognized?.categoryId;
+    if (!guess) return;
+    setCategoryId(guess);
+    if (recognized?.accountId && accountFitsMode(data, 'expense', recognized.accountId)) setAccountId(recognized.accountId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [recognized?.key, recognized?.categoryId, chosenByHand, mode]);
 
   // Opened from a debt's "Pay" button: fill in that payment.
   useEffect(() => {
@@ -247,6 +268,7 @@ export default function QuickAddScreen() {
     setPayee('');
     setNote('');
     setError(null);
+    setChosenByHand(false);
   };
 
   const save = (again: boolean) => {
@@ -416,6 +438,7 @@ export default function QuickAddScreen() {
                       label={parent ? `${parent.name} › ${c.name}` : c.name}
                       selected={categoryId === id}
                       onPress={() => {
+                        setChosenByHand(true);
                         setCategoryId(id);
                         setAccountId(defaultAccountFor(data, id));
                       }}
@@ -434,6 +457,23 @@ export default function QuickAddScreen() {
                   {payees.map((p) => (
                     <Pill key={p} label={p} size="sm" selected={payee === p} onPress={() => setPayee(payee === p ? '' : p)} />
                   ))}
+                </View>
+              )}
+              {recognized && (
+                <View style={styles.wrap}>
+                  {filledFromHistory && categoryId && (
+                    <Text variant="small" color={colors.textSecondary} style={{ width: '100%' }}>
+                      {`Filed under ${categoryPath(index.categories, categoryId)} — what you usually pick here.`}
+                    </Text>
+                  )}
+                  {cents === 0 && recognized.lastAmount > 0 && (
+                    <Pill
+                      icon="corner-up-left"
+                      size="sm"
+                      label={`Last time ${plain(recognized.lastAmount)}`}
+                      onPress={() => setAmount(centsToInput(recognized.lastAmount).replace(/.00$/, ''))}
+                    />
+                  )}
                 </View>
               )}
             </View>
@@ -554,6 +594,7 @@ export default function QuickAddScreen() {
         options={categoryOptions(data, mode === 'income' ? 'income' : 'expense')}
         value={categoryId}
         onSelect={(id) => {
+          setChosenByHand(true);
           setCategoryId(id);
           if (mode === 'expense') setAccountId(defaultAccountFor(data, id));
         }}
