@@ -54,7 +54,10 @@ const SERVICE_WORKER = `
 `;
 
 const BODY = `
-  body { background-color: var(--c-background); overscroll-behavior-y: none; }
+  /* Brand blue until the opening screen hands over: iOS paints the area under
+     the notch with the page's own background, not with the app's root view. */
+  body { background-color: #2469FE; overscroll-behavior-y: none; }
+  body.app-ready { background-color: var(--c-background); }
   /* Form controls and scrollbars follow the theme too. */
   :root { color-scheme: light; }
   [data-theme='dark'] { color-scheme: dark; }

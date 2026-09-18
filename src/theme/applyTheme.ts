@@ -18,6 +18,8 @@ export function applyTheme(choice: ThemeChoice) {
   else root.setAttribute('data-theme', choice);
   const meta = doc.querySelector('meta[name="theme-color"]');
   if (meta) meta.setAttribute('content', isDark(choice) ? DARK.background : LIGHT.background);
+  // Releases the brand blue the page opened with (see +html.tsx).
+  doc.body?.classList.add('app-ready');
 }
 
 /** Whether the given choice resolves to the dark palette right now. */

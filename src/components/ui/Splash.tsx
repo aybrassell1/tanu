@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import { Animated, Image, Platform, StyleSheet, View, type ViewStyle } from 'react-native';
 
 import { LIGHT } from '@/theme/palette';
-import { colors } from '@/theme/tokens';
 import { easing, motion, useReducedMotion } from '@/theme/motion';
 
 const MARK = require('../../../assets/brand/tanu-mark-white.png');
@@ -32,10 +31,7 @@ export function Splash({ ready, onDone }: { ready: boolean; onDone: () => void }
   const cover = useRef(new Animated.Value(1)).current;
   const [shownAt] = useState(() => Date.now());
 
-  useEffect(() => {
-    setStatusBarColor(BRAND);
-    return () => setStatusBarColor(colors.background);
-  }, []);
+  useEffect(() => setStatusBarColor(BRAND), []);
 
   useEffect(() => {
     if (reduced) {
