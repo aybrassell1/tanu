@@ -1,11 +1,13 @@
 import Feather from '@expo/vector-icons/Feather';
 import { Children, Fragment, isValidElement, type ReactNode } from 'react';
-import { Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { Animated, Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import type { IconName } from '@/data/icons';
 import { colors, spacing } from '@/theme/tokens';
 import { Card } from './Card';
 import { Text } from './Text';
+import { usePressScale } from '@/theme/motion';
+
 
 type IconTileProps = { icon: IconName; color?: string; size?: number; tint?: string };
 
@@ -36,15 +38,18 @@ type ListRowProps = {
 
 /** Icon tile + two lines + trailing slot, as in the template's "My assignments" list. */
 export function ListRow({ title, subtitle, icon, iconColor, leading, trailing, trailingCaption, chevron, onPress, onLongPress, dense, accessibilityLabel }: ListRowProps) {
+  const press = usePressScale(0.995);
   return (
-    <Pressable
-      disabled={!onPress && !onLongPress}
-      onPress={onPress}
-      onLongPress={onLongPress}
-      accessibilityRole={onPress ? 'button' : undefined}
-      accessibilityLabel={accessibilityLabel}
-      style={({ pressed }) => [styles.row, dense && styles.dense, pressed && { opacity: 0.6 }]}
-    >
+    <Animated.View style={press.style}>
+      <Pressable
+        disabled={!onPress && !onLongPress}
+        onPress={onPress}
+        onLongPress={onLongPress}
+        accessibilityRole={onPress ? 'button' : undefined}
+        accessibilityLabel={accessibilityLabel}
+        {...press.handlers}
+        style={({ pressed }) => [styles.row, dense && styles.dense, pressed && { opacity: 0.6 }]}
+      >
       {leading ?? (icon && <IconTile icon={icon} color={iconColor} size={dense ? 34 : 40} />)}
       <View style={styles.body}>
         <Text variant="body" weight="medium" numberOfLines={1}>
@@ -66,8 +71,9 @@ export function ListRow({ title, subtitle, icon, iconColor, leading, trailing, t
           )}
         </View>
       )}
-      {chevron && <Feather name="chevron-right" size={18} color={colors.textTertiary} />}
-    </Pressable>
+        {chevron && <Feather name="chevron-right" size={18} color={colors.textTertiary} />}
+      </Pressable>
+    </Animated.View>
   );
 }
 

@@ -1,8 +1,10 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import type { ReactNode } from 'react';
-import { Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { Animated, Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { colors, gradients, radius, shadows, spacing } from '@/theme/tokens';
+import { usePressScale } from '@/theme/motion';
+
 
 type CardProps = {
   children: ReactNode;
@@ -14,16 +16,20 @@ type CardProps = {
 };
 
 export function Card({ children, variant = 'outlined', padding = spacing.lg, style, onPress, accessibilityLabel }: CardProps) {
+  const press = usePressScale(0.99);
   if (onPress) {
     return (
-      <Pressable
-        onPress={onPress}
-        accessibilityRole="button"
-        accessibilityLabel={accessibilityLabel}
-        style={({ pressed }) => [styles.base, styles[variant], { padding }, pressed && styles.pressed, style]}
-      >
-        {children}
-      </Pressable>
+      <Animated.View style={[press.style, style]}>
+        <Pressable
+          onPress={onPress}
+          accessibilityRole="button"
+          accessibilityLabel={accessibilityLabel}
+          {...press.handlers}
+          style={({ pressed }) => [styles.base, styles[variant], { padding }, pressed && styles.pressed]}
+        >
+          {children}
+        </Pressable>
+      </Animated.View>
     );
   }
   return <View style={[styles.base, styles[variant], { padding }, style]}>{children}</View>;

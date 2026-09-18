@@ -49,11 +49,25 @@
         {
           "faceIDPermission": "Tanu uses Face ID to unlock your finances on this device."
         }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/brand/tanu-mark-white.png",
+          "imageWidth": 160,
+          "resizeMode": "contain",
+          "backgroundColor": "#2469FE"
+        }
       ]
     ],
     "scheme": "tanu",
     "experiments": {
       "baseUrl": "/tanu"
+    },
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#2469FE"
     }
   }
 }

@@ -1,8 +1,9 @@
 import { useRouter } from 'expo-router';
 import type { ReactNode } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { Animated, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets, type Edge } from 'react-native-safe-area-context';
 
+import { useEnter } from '@/theme/motion';
 import { colors, spacing, TAB_BAR_CLEARANCE } from '@/theme/tokens';
 import { IconButton } from './Button';
 import { Text } from './Text';
@@ -23,6 +24,8 @@ type ScreenProps = {
 
 export function Screen({ children, tabBar = false, edges = ['top'], background = colors.background, contentStyle, header, footer, scroll = true }: ScreenProps) {
   const insets = useSafeAreaInsets();
+  // Content settles in rather than snapping, so moving between screens reads as movement.
+  const enter = useEnter();
   const bottomPad = tabBar ? TAB_BAR_CLEARANCE : footer ? spacing.xl : spacing.xxxl + insets.bottom;
   const body = scroll ? (
     <ScrollView
@@ -30,10 +33,10 @@ export function Screen({ children, tabBar = false, edges = ['top'], background =
       showsVerticalScrollIndicator={false}
       contentContainerStyle={[styles.content, { paddingBottom: bottomPad }, contentStyle]}
     >
-      {children}
+      <Animated.View style={[{ gap: spacing.xxl }, enter]}>{children}</Animated.View>
     </ScrollView>
   ) : (
-    <View style={[styles.content, { flex: 1, paddingBottom: bottomPad }, contentStyle]}>{children}</View>
+    <Animated.View style={[styles.content, { flex: 1, paddingBottom: bottomPad }, contentStyle, enter]}>{children}</Animated.View>
   );
 
   return (

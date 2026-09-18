@@ -1,9 +1,11 @@
 import Feather from '@expo/vector-icons/Feather';
-import { ActivityIndicator, Pressable, StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
+import { ActivityIndicator, Animated, Pressable, StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
 
 import type { IconName } from '@/data/icons';
 import { colors, radius } from '@/theme/tokens';
 import { Text } from './Text';
+import { usePressScale } from '@/theme/motion';
+
 
 const variants = {
   primary: { bg: colors.primary, pressed: colors.primaryPressed, fg: colors.onPrimary, border: colors.primary },
@@ -33,31 +35,34 @@ export function Button({ label, onPress, variant = 'primary', size = 'md', icon,
   const v = variants[variant];
   const s = SIZES[size];
   const inactive = disabled || loading;
+  const press = usePressScale();
   return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityState={{ disabled: inactive }}
-      accessibilityHint={accessibilityHint}
-      disabled={inactive}
-      onPress={onPress}
-      style={({ pressed }) => [
-        styles.base,
-        { height: s.height, paddingHorizontal: s.px, borderRadius: size === 'lg' ? 14 : radius.md },
-        fullWidth && styles.fullWidth,
-        { backgroundColor: pressed ? v.pressed : v.bg, borderColor: v.border, opacity: inactive ? 0.5 : 1 },
-        style,
-      ]}
-    >
-      {loading ? (
-        <ActivityIndicator size="small" color={v.fg} />
-      ) : (
-        icon && <Feather name={icon} size={s.icon} color={v.fg} />
-      )}
-      <Text variant={size === 'lg' ? 'body' : 'small'} weight="semibold" color={v.fg} numberOfLines={1}>
-        {label}
-      </Text>
-      {trailingIcon && <Feather name={trailingIcon} size={s.icon} color={v.fg} />}
-    </Pressable>
+    <Animated.View style={[fullWidth && styles.fullWidth, press.style, style]}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityState={{ disabled: inactive }}
+        accessibilityHint={accessibilityHint}
+        disabled={inactive}
+        onPress={onPress}
+        {...press.handlers}
+        style={({ pressed }) => [
+          styles.base,
+          { height: s.height, paddingHorizontal: s.px, borderRadius: size === 'lg' ? 14 : radius.md },
+          fullWidth && styles.fullWidth,
+          { backgroundColor: pressed ? v.pressed : v.bg, borderColor: v.border, opacity: inactive ? 0.5 : 1 },
+        ]}
+      >
+        {loading ? (
+          <ActivityIndicator size="small" color={v.fg} />
+        ) : (
+          icon && <Feather name={icon} size={s.icon} color={v.fg} />
+        )}
+        <Text variant={size === 'lg' ? 'body' : 'small'} weight="semibold" color={v.fg} numberOfLines={1}>
+          {label}
+        </Text>
+        {trailingIcon && <Feather name={trailingIcon} size={s.icon} color={v.fg} />}
+      </Pressable>
+    </Animated.View>
   );
 }
 
@@ -71,6 +76,7 @@ type IconButtonProps = {
 };
 
 export function IconButton({ icon, onPress, variant = 'light', size = 40, accessibilityLabel, disabled }: IconButtonProps) {
+  const press = usePressScale(0.92);
   const palette = {
     light: { bg: colors.surface, border: colors.border, fg: colors.ink },
     dark: { bg: colors.ink, border: colors.ink, fg: colors.onPrimary },
@@ -79,19 +85,22 @@ export function IconButton({ icon, onPress, variant = 'light', size = 40, access
     primary: { bg: colors.primary, border: colors.primary, fg: colors.onPrimary },
   }[variant];
   return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={accessibilityLabel}
-      onPress={onPress}
-      disabled={disabled}
-      hitSlop={6}
-      style={({ pressed }) => [
-        styles.icon,
-        { width: size, height: size, backgroundColor: palette.bg, borderColor: palette.border, opacity: disabled ? 0.4 : pressed ? 0.7 : 1 },
-      ]}
-    >
-      <Feather name={icon} size={Math.round(size * 0.45)} color={palette.fg} />
-    </Pressable>
+    <Animated.View style={press.style}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={accessibilityLabel}
+        onPress={onPress}
+        disabled={disabled}
+        hitSlop={6}
+        {...press.handlers}
+        style={({ pressed }) => [
+          styles.icon,
+          { width: size, height: size, backgroundColor: palette.bg, borderColor: palette.border, opacity: disabled ? 0.4 : pressed ? 0.7 : 1 },
+        ]}
+      >
+        <Feather name={icon} size={Math.round(size * 0.45)} color={palette.fg} />
+      </Pressable>
+    </Animated.View>
   );
 }
 

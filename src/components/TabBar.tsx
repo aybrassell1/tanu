@@ -2,11 +2,12 @@ import Feather from '@expo/vector-icons/Feather';
 import { useRouter } from 'expo-router';
 import type { BottomTabBarProps } from 'expo-router/tabs';
 import { Fragment } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Animated, Pressable, StyleSheet, View } from 'react-native';
 
 import { Text } from '@/components/ui';
 import type { IconName } from '@/data/icons';
 import { colors, radius, shadows } from '@/theme/tokens';
+import { usePressScale } from '@/theme/motion';
 
 const icons: Record<string, IconName> = {
   index: 'home',
@@ -37,18 +38,14 @@ export function TabBar({ state, descriptors, navigation, insets }: BottomTabBarP
 
           return (
             <Fragment key={route.key}>
-              {index === middle && (
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel="Quick add"
-                  accessibilityHint="Record an expense, paycheck, transfer, debt payment or balance"
-                  onPress={() => router.push('/quick-add')}
-                  style={({ pressed }) => [styles.add, pressed && { opacity: 0.8 }]}
-                >
-                  <Feather name="plus" size={24} color={colors.onPrimary} />
-                </Pressable>
-              )}
-              <Pressable accessibilityRole="tab" accessibilityState={{ selected: focused }} accessibilityLabel={label} onPress={onPress} style={styles.tab}>
+              {index === middle && <QuickAddButton onPress={() => router.push('/quick-add')} />}
+              <Pressable
+                accessibilityRole="tab"
+                accessibilityState={{ selected: focused }}
+                accessibilityLabel={label}
+                onPress={onPress}
+                style={({ pressed }) => [styles.tab, pressed && { opacity: 0.6 }]}
+              >
                 <Feather name={icons[route.name] ?? 'circle'} size={20} color={color} />
                 <Text variant="caption" color={color} weight={focused ? 'semibold' : 'medium'}>
                   {label}
@@ -59,6 +56,25 @@ export function TabBar({ state, descriptors, navigation, insets }: BottomTabBarP
         })}
       </View>
     </View>
+  );
+}
+
+/** The one button people tap most: it dips under the finger. */
+function QuickAddButton({ onPress }: { onPress: () => void }) {
+  const press = usePressScale(0.9);
+  return (
+    <Animated.View style={press.style}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Quick add"
+        accessibilityHint="Record an expense, paycheck, transfer, debt payment or balance"
+        onPress={onPress}
+        {...press.handlers}
+        style={({ pressed }) => [styles.add, pressed && { opacity: 0.9 }]}
+      >
+        <Feather name="plus" size={24} color={colors.onPrimary} />
+      </Pressable>
+    </Animated.View>
   );
 }
 

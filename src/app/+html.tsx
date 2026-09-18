@@ -40,7 +40,9 @@ export default function Root({ children }: { children: ReactNode }) {
 }
 
 const SERVICE_WORKER = `
-  if ('serviceWorker' in navigator) {
+  // Dev servers rebuild constantly; a cache there only serves stale pages.
+  var local = ['localhost', '127.0.0.1'].indexOf(window.location.hostname) !== -1;
+  if ('serviceWorker' in navigator && !local) {
     window.addEventListener('load', function () {
       navigator.serviceWorker.register(new URL('sw.js', window.location.href).pathname).catch(function () {});
     });
