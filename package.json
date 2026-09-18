@@ -40,7 +40,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "build:icons": "node scripts/build-icons.mjs",
-    "build:brand": "node scripts/build-brand.mjs"
+    "build:brand": "node scripts/build-brand.mjs",
+    "build:web": "expo export --platform web && node -e \"require('fs').writeFileSync('dist/.nojekyll','')\" && node -e \"for (const f of ['apple-touch-icon.png','pwa-192.png','pwa-512.png']) require('fs').copyFileSync('assets/'+f,'dist/assets/'+f)\""
   },
   "private": true
 }

@@ -8,7 +8,24 @@ const PREVIOUS = 'masterfinance:ledger:previous';
 
 export const storageDescription = 'Stored in this browser’s local storage on this device.';
 
+/**
+ * Asks the browser to keep this site's data. Without it, iOS and some desktop
+ * browsers may evict local storage when space runs low or the app sits unused.
+ * Granted silently on a home-screen app; harmless when refused.
+ */
+export async function requestDurableStorage(): Promise<boolean> {
+  try {
+    const storage = navigator.storage;
+    if (!storage?.persist) return false;
+    if (await storage.persisted?.()) return true;
+    return await storage.persist();
+  } catch {
+    return false;
+  }
+}
+
 export async function loadLedgerText(): Promise<string | null> {
+  void requestDurableStorage();
   for (const key of [KEY, PREVIOUS]) {
     try {
       const text = window.localStorage.getItem(key);

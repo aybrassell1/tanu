@@ -20,7 +20,18 @@
     },
     "web": {
       "favicon": "./assets/favicon.png",
-      "bundler": "metro"
+      "bundler": "metro",
+      "output": "static",
+      "name": "Tanu",
+      "shortName": "Tanu",
+      "description": "Everything you own, owe, earn, spend and plan — in one calm place.",
+      "themeColor": "#2469FE",
+      "backgroundColor": "#FFFFFF",
+      "display": "standalone",
+      "orientation": "portrait",
+      "startUrl": "/",
+      "lang": "en",
+      "scope": "/"
     },
     "plugins": [
       "expo-router",
@@ -40,6 +51,9 @@
         }
       ]
     ],
-    "scheme": "tanu"
+    "scheme": "tanu",
+    "experiments": {
+      "baseUrl": "/tanu"
+    }
   }
 }
