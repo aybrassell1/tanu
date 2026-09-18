@@ -50,9 +50,14 @@ export function Splash({ ready, onDone }: { ready: boolean; onDone: () => void }
         onDone();
         return;
       }
-      Animated.timing(cover, { toValue: 0, duration: motion.screen, easing: easing.inOut, useNativeDriver: true }).start(({ finished }) => finished && onDone());
+      Animated.timing(cover, { toValue: 0, duration: motion.screen, easing: easing.inOut, useNativeDriver: true }).start(() => onDone());
     }, settle);
-    return () => clearTimeout(timer);
+    // Never leave the app stuck behind the panel if an animation is interrupted.
+    const failsafe = setTimeout(onDone, settle + motion.screen + 400);
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(failsafe);
+    };
   }, [cover, onDone, ready, reduced, shownAt]);
 
   const panel: ViewStyle[] = [

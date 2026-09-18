@@ -16,6 +16,12 @@ export interface Palette {
   primaryMuted: string;
 
   ink: string;
+  /** Pressed state of an ink-filled surface (the inverted chip, dark buttons). */
+  inkPressed: string;
+  /** Text on an ink-filled surface. */
+  onInk: string;
+  /** Muted text on an ink-filled surface, e.g. a chart tooltip label. */
+  onInkMuted: string;
   textSecondary: string;
   textTertiary: string;
   onPrimary: string;
@@ -72,6 +78,9 @@ export const LIGHT: Palette = {
   primaryMuted: '#BCD3FF',
 
   ink: '#0C0407',
+  inkPressed: '#2A2427',
+  onInk: '#FFFFFF',
+  onInkMuted: 'rgba(255,255,255,0.7)',
   textSecondary: '#5C5C5C',
   textTertiary: '#858585',
   onPrimary: '#FFFFFF',
@@ -126,6 +135,9 @@ export const DARK: Palette = {
   primaryMuted: '#31406B',
 
   ink: '#F2EFEE',
+  inkPressed: '#D9D5D3',
+  onInk: '#131217',
+  onInkMuted: 'rgba(19,18,23,0.66)',
   textSecondary: '#AFA8A6',
   textTertiary: '#8A8482',
   onPrimary: '#0B0A0C',

@@ -10,7 +10,7 @@ import { usePressScale } from '@/theme/motion';
 const variants = {
   primary: { bg: colors.primary, pressed: colors.primaryPressed, fg: colors.onPrimary, border: colors.primary },
   secondary: { bg: colors.surface, pressed: colors.surfaceMuted, fg: colors.ink, border: colors.border },
-  dark: { bg: colors.ink, pressed: '#2A2427', fg: colors.onPrimary, border: colors.ink },
+  dark: { bg: colors.ink, pressed: colors.inkPressed, fg: colors.onInk, border: colors.ink },
   ghost: { bg: 'transparent', pressed: colors.surfaceMuted, fg: colors.primary, border: 'transparent' },
   danger: { bg: colors.surface, pressed: colors.negativeSoft, fg: colors.negative, border: colors.border },
 } as const;
@@ -79,7 +79,7 @@ export function IconButton({ icon, onPress, variant = 'light', size = 40, access
   const press = usePressScale(0.92);
   const palette = {
     light: { bg: colors.surface, border: colors.border, fg: colors.ink },
-    dark: { bg: colors.ink, border: colors.ink, fg: colors.onPrimary },
+    dark: { bg: colors.ink, border: colors.ink, fg: colors.onInk },
     glass: { bg: colors.glass, border: colors.glassBorder, fg: colors.onGradient },
     plain: { bg: 'transparent', border: 'transparent', fg: colors.ink },
     primary: { bg: colors.primary, border: colors.primary, fg: colors.onPrimary },

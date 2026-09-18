@@ -29,6 +29,10 @@ export const colors = {
   primaryMuted: token('primaryMuted'),
 
   ink: token('ink'),
+  /** Pressed state and text colours for ink-filled surfaces. */
+  inkPressed: token('inkPressed'),
+  onInk: token('onInk'),
+  onInkMuted: token('onInkMuted'),
   textSecondary: token('textSecondary'),
   /** Captions and axis labels; 4.5:1 on its own surface in both themes. */
   textTertiary: token('textTertiary'),

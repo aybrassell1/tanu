@@ -349,7 +349,7 @@ function SavingRate({ months }: { months: MonthRow[] }) {
 const styles = StyleSheet.create({
   heroSplit: { flexDirection: 'row', gap: spacing.md, backgroundColor: 'rgba(12,4,7,0.12)', borderRadius: radius.md, padding: spacing.md },
   // Dark text on a light strip: the gradient fades to sky blue here, where white text loses contrast.
-  heroNote: { backgroundColor: 'rgba(255,255,255,0.92)', borderRadius: radius.md, paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
+  heroNote: { backgroundColor: colors.surface, borderRadius: radius.md, paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
   legendLine: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   swatch: { width: 10, height: 10, borderRadius: 3 },
   // Matches the chart plot area (y-axis labels on the left).

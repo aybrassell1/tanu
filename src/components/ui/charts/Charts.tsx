@@ -47,16 +47,16 @@ function Tooltip({ title, rows, x, width }: { title: string; rows: { label: stri
   const left = Math.max(0, Math.min(width - boxWidth, x - boxWidth / 2));
   return (
     <View style={[styles.tooltip, { left, width: boxWidth, pointerEvents: 'none' }]}>
-      <Text variant="caption" color="rgba(255,255,255,0.7)">
+      <Text variant="caption" color={colors.onInkMuted}>
         {title}
       </Text>
       {rows.map((r) => (
         <View key={r.label} style={styles.tooltipRow}>
           <View style={{ width: 10, height: 2, backgroundColor: r.color, borderRadius: 1 }} />
-          <Text variant="small" weight="semibold" color={colors.onPrimary} tabular>
+          <Text variant="small" weight="semibold" color={colors.onInk} tabular>
             {r.value}
           </Text>
-          <Text variant="caption" color="rgba(255,255,255,0.7)" numberOfLines={1} style={{ flex: 1 }}>
+          <Text variant="caption" color={colors.onInkMuted} numberOfLines={1} style={{ flex: 1 }}>
             {r.label}
           </Text>
         </View>

@@ -15,7 +15,7 @@ export const PILL_TONES = {
   warning: { bg: colors.warningSoft, border: colors.warningSoft, fg: colors.warning },
   projected: { bg: colors.projectedSoft, border: colors.projectedSoft, fg: colors.projected },
   glass: { bg: colors.glass, border: colors.glassBorder, fg: colors.onGradient },
-  dark: { bg: colors.ink, border: colors.ink, fg: colors.onPrimary },
+  dark: { bg: colors.ink, border: colors.ink, fg: colors.onInk },
 } as const;
 
 export type PillTone = keyof typeof PILL_TONES;

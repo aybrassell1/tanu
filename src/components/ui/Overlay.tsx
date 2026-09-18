@@ -160,8 +160,8 @@ export function OverlayProvider({ children }: { children: ReactNode }) {
       {toast && (
         <Animated.View style={[styles.toastWrap, { pointerEvents: 'box-none' }, { bottom: insets.bottom + 100, opacity }]}>
           <View style={[styles.toast, toast.tone === 'error' && { backgroundColor: colors.negative }]} accessibilityLiveRegion="polite">
-            <Feather name={toast.tone === 'error' ? 'alert-circle' : 'check'} size={16} color={colors.onPrimary} />
-            <Text variant="small" weight="medium" color={colors.onPrimary} style={{ flex: 1 }}>
+            <Feather name={toast.tone === 'error' ? 'alert-circle' : 'check'} size={16} color={colors.onInk} />
+            <Text variant="small" weight="medium" color={colors.onInk} style={{ flex: 1 }}>
               {toast.message}
             </Text>
             {toast.actionLabel && (

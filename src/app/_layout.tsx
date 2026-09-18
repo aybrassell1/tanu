@@ -13,14 +13,25 @@ import { applyTheme } from '@/theme/applyTheme';
 import { motion } from '@/theme/motion';
 import { colors } from '@/theme/tokens';
 
+/**
+ * The opening screen belongs to the session, not to a mount: a remount (a deep
+ * link into a modal route, a fast refresh) must not replay it.
+ */
+let opened = false;
+
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({ Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold });
   const hydrated = useLedgerStore((s) => s.hydrated);
   // The blue opening screen covers the app until fonts and the ledger are in.
-  const [opening, setOpening] = useState(true);
+  const [opening, setOpening] = useState(!opened);
   const ready = fontsLoaded && hydrated;
 
   const theme = useLedgerStore((s) => s.data.settings.theme);
+
+  const finishOpening = () => {
+    opened = true;
+    setOpening(false);
+  };
 
   useEffect(() => {
     void hydrateLedger();
@@ -34,7 +45,7 @@ export default function RootLayout() {
   if (!ready && opening) {
     return (
       <View style={{ flex: 1, backgroundColor: colors.primary }}>
-        <Splash ready={false} onDone={() => setOpening(false)} />
+        <Splash ready={false} onDone={finishOpening} />
       </View>
     );
   }
@@ -63,7 +74,7 @@ export default function RootLayout() {
           ))}
         </Stack>
       </LockGate>
-      {opening && <Splash ready={ready} onDone={() => setOpening(false)} />}
+      {opening && <Splash ready={ready} onDone={finishOpening} />}
     </OverlayProvider>
   );
 }
