@@ -518,7 +518,7 @@ export function ForecastWidget({ m }: { m: DashboardModel }) {
           <FlowStat label="Lowest (projected)" cents={f.lowest.balance} caption={formatDate(f.lowest.date, 'short', m.today)} />
           <FlowStat label="In 30 days" cents={f.end} caption="Projected" />
         </View>
-        <Sparkline values={values} width={300} height={48} color={f.lowest.balance < 0 ? colors.negative : colors.primary} />
+        <Sparkline values={values} fill height={48} color={f.lowest.balance < 0 ? colors.negative : colors.primary} />
       </Card>
     </Section>
   );

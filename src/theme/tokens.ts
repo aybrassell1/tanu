@@ -67,6 +67,7 @@ export const colors = {
   glassBorder: token('glassBorder'),
   /** Recessed panel inside a gradient card. */
   gradientScrim: token('gradientScrim'),
+  gradientShade: token('gradientShade'),
   overlay: token('overlay'),
 } as const;
 

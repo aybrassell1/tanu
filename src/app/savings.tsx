@@ -78,21 +78,21 @@ export default function SavingsScreen() {
             <Text variant="caption" color={colors.onGradientMuted}>
               Assigned to goals
             </Text>
-            <Money cents={m.assigned} variant="h3" color={colors.onGradient} />
+            <Money cents={m.assigned} variant="h3" color={colors.onGradient} whole />
           </View>
           {m.reservedInSavings > 0 && (
             <View style={{ flex: 1 }}>
               <Text variant="caption" color={colors.onGradientMuted}>
                 Reserved for costs
               </Text>
-              <Money cents={m.reservedInSavings} variant="h3" color={colors.onGradient} />
+              <Money cents={m.reservedInSavings} variant="h3" color={colors.onGradient} whole />
             </View>
           )}
           <View style={{ flex: 1 }}>
             <Text variant="caption" color={colors.onGradientMuted}>
               Not assigned or reserved
             </Text>
-            <Money cents={unassigned} variant="h3" color={colors.onGradient} />
+            <Money cents={unassigned} variant="h3" color={colors.onGradient} whole />
           </View>
         </View>
         <View style={styles.heroNote}>
@@ -347,8 +347,8 @@ function SavingRate({ months }: { months: MonthRow[] }) {
 }
 
 const styles = StyleSheet.create({
-  heroSplit: { flexDirection: 'row', gap: spacing.md, backgroundColor: 'rgba(12,4,7,0.12)', borderRadius: radius.md, padding: spacing.md },
-  // Dark text on a light strip: the gradient fades to sky blue here, where white text loses contrast.
+  heroSplit: { flexDirection: 'row', gap: spacing.md, backgroundColor: colors.gradientScrim, borderRadius: radius.md, padding: spacing.md },
+  // A plain surface panel: a plain-language note reads better off the gradient than on it.
   heroNote: { backgroundColor: colors.surface, borderRadius: radius.md, paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
   legendLine: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   swatch: { width: 10, height: 10, borderRadius: 3 },

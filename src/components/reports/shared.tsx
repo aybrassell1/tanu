@@ -233,8 +233,8 @@ const styles = StyleSheet.create({
   delta: { flexDirection: 'row', alignItems: 'center', gap: 3 },
   chartHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   takeaway: { flexDirection: 'row', gap: spacing.sm, padding: spacing.md, borderRadius: radius.md, backgroundColor: colors.primarySoft },
-  table: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border },
-  tr: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingVertical: 8, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border },
+  table: { borderTopWidth: 1, borderTopColor: colors.border },
+  tr: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: colors.border },
   thead: { paddingVertical: 6 },
   cell: { justifyContent: 'center' },
 });

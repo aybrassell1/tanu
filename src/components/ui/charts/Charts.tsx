@@ -393,7 +393,11 @@ export function HBarList({ items, max }: { items: HBarItem[]; max?: number }) {
 
 // ─── Sparkline ───────────────────────────────────────────────────────────────
 
-export function Sparkline({ values, color = colors.primary, height = 36, width = 96 }: { values: number[]; color?: string; height?: number; width?: number }) {
+export function Sparkline({ values, color = colors.primary, height = 36, width = 96, fill }: { values: number[]; color?: string; height?: number; width?: number; fill?: boolean }) {
+  // `fill` measures the row instead of trusting a fixed width, so the line
+  // reaches the edge of a narrow phone and a wide window alike.
+  const [measured, onLayout] = useWidth();
+  if (fill) return <View onLayout={onLayout} style={{ height }}>{measured > 0 && <Sparkline values={values} color={color} height={height} width={measured} />}</View>;
   if (values.length < 2) return <View style={{ width, height }} />;
   const min = Math.min(...values);
   const max = Math.max(...values);

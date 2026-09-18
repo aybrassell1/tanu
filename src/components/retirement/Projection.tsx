@@ -78,12 +78,12 @@ export function ReturnBand({ projection }: { projection: RetirementProjection })
   return (
     <View style={{ gap: spacing.sm }}>
       <Text variant="caption" color={colors.textTertiary}>
-        {`Same contributions, three different returns — all by ${atRetirement.year}`}
+        {`Same contributions, three yearly returns — all by ${atRetirement.year}`}
       </Text>
       <View style={styles.tiles}>
-        <StatTile label={`${band.lowRate}% a year`} icon="trending-down" value={<Money cents={band.low} variant="h3" compact whole />} caption={by} />
-        <StatTile label={`${band.midRate}% a year`} icon="minus" value={<Money cents={band.mid} variant="h3" compact whole />} caption={`${by} · your assumption`} />
-        <StatTile label={`${band.highRate}% a year`} icon="trending-up" value={<Money cents={band.high} variant="h3" compact whole />} caption={by} />
+        <StatTile label={`${band.lowRate}%`} icon="trending-down" value={<Money cents={band.low} variant="h3" compact whole />} caption={by} />
+        <StatTile label={`${band.midRate}%`} icon="minus" value={<Money cents={band.mid} variant="h3" compact whole />} caption={`${by} · yours`} />
+        <StatTile label={`${band.highRate}%`} icon="trending-up" value={<Money cents={band.high} variant="h3" compact whole />} caption={by} />
       </View>
     </View>
   );

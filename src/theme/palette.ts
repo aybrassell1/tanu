@@ -53,6 +53,11 @@ export interface Palette {
   glassBorder: string;
   /** Recessed panel drawn *inside* a gradient card, so text on it still reads. */
   gradientScrim: string;
+  /**
+   * Laid over a gradient panel along the same diagonal, deepening toward the
+   * light end. Without it a hero's pale corner drops white text to ~1.5:1.
+   */
+  gradientShade: string;
   overlay: string;
 
   statusGood: string;
@@ -89,7 +94,7 @@ export const LIGHT: Palette = {
   textTertiary: '#6E6E6E',
   onPrimary: '#FFFFFF',
   onGradient: '#FFFFFF',
-  onGradientMuted: 'rgba(255,255,255,0.82)',
+  onGradientMuted: 'rgba(255,255,255,0.92)',
 
   background: '#FFFFFF',
   surface: '#FFFFFF',
@@ -112,7 +117,8 @@ export const LIGHT: Palette = {
 
   glass: 'rgba(12,4,7,0.34)',
   glassBorder: 'rgba(255,255,255,0.38)',
-  gradientScrim: 'rgba(12,4,7,0.16)',
+  gradientScrim: 'rgba(8,18,52,0.22)',
+  gradientShade: 'rgba(8,18,52,0.38)',
   overlay: 'rgba(12,4,7,0.4)',
 
   statusGood: '#0CA30C',
@@ -126,7 +132,7 @@ export const LIGHT: Palette = {
 
   series: ['#2469FE', '#EB6834', '#1BAF7A', '#EDA100', '#E87BA4', '#008300', '#4A3AA7', '#E34948'],
 
-  gradientHero: ['#2469FE', '#5A95FC', '#A9D5FB'],
+  gradientHero: ['#1A4ED8', '#2E6BF2', '#5E9BF9'],
   gradientSoft: ['#EAF1FF', '#F7FBFF'],
   gradientProjected: ['#6D28D9', '#8B5CF6', '#C4B5FD'],
 
@@ -148,14 +154,14 @@ export const DARK: Palette = {
   textTertiary: '#8A8482',
   onPrimary: '#0B0A0C',
   onGradient: '#FFFFFF',
-  onGradientMuted: 'rgba(255,255,255,0.82)',
+  onGradientMuted: 'rgba(255,255,255,0.92)',
 
   background: '#0E0D10',
   surface: '#17161A',
   surfaceMuted: '#1E1C21',
   surfaceSunken: '#26242A',
   track: '#2B2930',
-  border: '#2A282E',
+  border: '#312E36',
   borderStrong: '#3A373F',
 
   star: '#FFC94D',
@@ -172,6 +178,7 @@ export const DARK: Palette = {
   glass: 'rgba(255,255,255,0.12)',
   glassBorder: 'rgba(255,255,255,0.24)',
   gradientScrim: 'rgba(0,0,0,0.25)',
+  gradientShade: 'rgba(0,0,0,0.12)',
   overlay: 'rgba(0,0,0,0.6)',
 
   statusGood: '#3FD07E',

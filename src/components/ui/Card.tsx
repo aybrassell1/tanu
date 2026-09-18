@@ -44,6 +44,17 @@ export function GradientCard({
 }: Omit<CardProps, 'variant' | 'onPress'> & { palette?: 'hero' | 'projected' }) {
   return (
     <LinearGradient colors={gradients[palette]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[styles.gradient, { padding }, style]}>
+      {/*
+        The gradient's light end can't carry white text on its own, so a shade
+        runs the same diagonal and deepens as the blue lightens. The card still
+        reads as a gradient; white text keeps about 6:1 wherever it lands.
+      */}
+      <LinearGradient
+        colors={['transparent', colors.gradientShade]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={[StyleSheet.absoluteFill, { pointerEvents: 'none' }]}
+      />
       {/* Soft diagonal sheen to echo the template's banded gradient. */}
       <View style={[styles.sheen, { pointerEvents: 'none' }]} />
       {children}

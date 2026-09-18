@@ -100,7 +100,8 @@ export function ListCard({ children, style, inset }: { children: ReactNode; styl
 export function KeyValue({ label, value, children, hint }: { label: string; value?: string; children?: ReactNode; hint?: string }) {
   return (
     <View style={styles.kv}>
-      <View style={{ flex: 1 }}>
+      {/* The label keeps at least two fifths of the row, whatever the value's length. */}
+      <View style={{ flex: 1, minWidth: '40%' }}>
         <Text color={colors.textSecondary}>{label}</Text>
         {!!hint && (
           <Text variant="caption" color={colors.textTertiary}>
@@ -123,7 +124,7 @@ const styles = StyleSheet.create({
   tile: { alignItems: 'center', justifyContent: 'center' },
   body: { flex: 1, gap: 2 },
   trailing: { alignItems: 'flex-end', gap: 2 },
-  divider: { height: StyleSheet.hairlineWidth, backgroundColor: colors.border },
+  divider: { height: 1, backgroundColor: colors.border },
   kv: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: spacing.md, paddingVertical: 13 },
 });
 
