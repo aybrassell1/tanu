@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Animated, Image, StyleSheet, View, type ViewStyle } from 'react-native';
+import { Animated, Image, Platform, StyleSheet, View, type ViewStyle } from 'react-native';
 
 import { colors } from '@/theme/tokens';
 import { easing, motion, useReducedMotion } from '@/theme/motion';
@@ -11,11 +11,27 @@ const MARK = require('../../../assets/brand/tanu-mark-white.png');
  * away to reveal the app underneath. It covers the wait for fonts and the
  * ledger, so the app never flashes an empty frame on a cold start.
  */
+/**
+ * iOS paints the status-bar area of a home-screen app with the page theme
+ * colour, so the opening screen borrows it and hands it back on the way out.
+ */
+function setStatusBarColor(color: string) {
+  if (Platform.OS !== 'web') return;
+  const doc = (globalThis as { document?: Document }).document;
+  const meta = doc?.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute('content', color);
+}
+
 export function Splash({ ready, onDone }: { ready: boolean; onDone: () => void }) {
   const reduced = useReducedMotion();
   const mark = useRef(new Animated.Value(0)).current;
   const cover = useRef(new Animated.Value(1)).current;
   const [shownAt] = useState(() => Date.now());
+
+  useEffect(() => {
+    setStatusBarColor(colors.primary);
+    return () => setStatusBarColor(colors.background);
+  }, []);
 
   useEffect(() => {
     if (reduced) {

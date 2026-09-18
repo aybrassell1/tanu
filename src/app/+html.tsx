@@ -16,7 +16,8 @@ export default function Root({ children }: { children: ReactNode }) {
 
         <title>Tanu</title>
         <meta name="description" content="Everything you own, owe, earn, spend and plan — in one calm place." />
-        <meta name="theme-color" content="#FFFFFF" />
+        {/* Brand blue until the opening screen hands over, so iOS paints the status bar to match. */}
+        <meta name="theme-color" content="#2469FE" />
 
         {/* Home-screen app on iOS: own icon, no Safari chrome. */}
         <meta name="apple-mobile-web-app-capable" content="yes" />
