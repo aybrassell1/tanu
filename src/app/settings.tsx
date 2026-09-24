@@ -63,6 +63,13 @@ export default function SettingsScreen() {
   const { confirm, toast } = useOverlay();
   const [warnings, setWarnings] = useState<string[] | null>(null);
   const counts = countRecords(data);
+  const ignored = settings.ignoredRecurring?.length ?? 0;
+
+  const restoreSuggestions = () => {
+    ledger.clearIgnoredRecurring();
+    toast({ message: 'Dismissed charges will be offered again', actionLabel: 'Undo', onAction: ledger.undo });
+    router.push('/bills/detected');
+  };
 
   const run = async (label: string, fn: () => Promise<void>) => {
     try {
@@ -177,6 +184,7 @@ export default function SettingsScreen() {
         <ListCard>
           <ListRow title="Customize dashboard" subtitle="Reorder or hide cards" icon="sliders" chevron onPress={() => router.push('/dashboard-edit')} />
           <ListRow title="Categories" subtitle="Add, rename or archive" icon="tag" chevron onPress={() => router.push('/categories')} />
+          <ListRow title="Recurring charges found for you" subtitle={ignored > 0 ? `${ignored} dismissed · tap to offer them again` : 'Charges that look like untracked bills'} icon="repeat" chevron onPress={() => (ignored > 0 ? restoreSuggestions() : router.push('/bills/detected'))} />
         </ListCard>
       </Section>
 

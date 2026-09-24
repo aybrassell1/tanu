@@ -675,6 +675,8 @@ export interface Settings {
   security: SecuritySettings;
   notifications: NotificationSettings;
   dashboard: { order: DashboardWidgetId[]; hidden: DashboardWidgetId[] };
+  /** Merchant fingerprints you have said are not a recurring bill. */
+  ignoredRecurring?: string[];
 }
 
 export interface LedgerMeta {

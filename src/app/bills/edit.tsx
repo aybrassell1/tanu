@@ -44,7 +44,21 @@ const TO_LABEL: Partial<Record<RecurringKind, string>> = {
 };
 
 export default function RecurringFormScreen() {
-  const params = useLocalSearchParams<{ id?: string; kind?: RecurringKind; name?: string; categoryId?: string; unit?: string }>();
+  const params = useLocalSearchParams<{
+    id?: string;
+    kind?: RecurringKind;
+    name?: string;
+    categoryId?: string;
+    unit?: string;
+    // Prefill, from a charge the app recognised as recurring.
+    amount?: string;
+    interval?: string;
+    startDate?: string;
+    accountId?: string;
+    payee?: string;
+    variable?: string;
+    essential?: string;
+  }>();
   const router = useRouter();
   const data = useData();
   const today = useToday();
@@ -54,17 +68,21 @@ export default function RecurringFormScreen() {
   const [draft, setDraft] = useState<Draft>(() => {
     if (existing) return { ...existing };
     const kind = params.kind && params.kind in RECURRING_KINDS ? params.kind : 'bill';
+    const unit = params.unit === 'year' || params.unit === 'week' || params.unit === 'day' ? params.unit : 'month';
+    const interval = Number(params.interval);
+    const amount = Number(params.amount);
     return {
       name: params.name ?? '',
       kind,
       categoryId: params.categoryId && data.categories.some((c) => c.id === params.categoryId) ? params.categoryId : undefined,
-      amount: 0,
-      variable: false,
-      frequency: { unit: params.unit === 'year' ? 'year' : 'month', interval: 1 },
-      startDate: today,
-      accountId: primaryCashAccount(data)?.id ?? '',
+      amount: Number.isFinite(amount) && amount > 0 ? Math.round(amount) : 0,
+      variable: params.variable === 'true',
+      frequency: { unit, interval: Number.isFinite(interval) && interval > 0 ? interval : 1 },
+      startDate: params.startDate ?? today,
+      accountId: (params.accountId && data.accounts.some((a) => a.id === params.accountId) ? params.accountId : primaryCashAccount(data)?.id) ?? '',
+      payee: params.payee || undefined,
       autopay: false,
-      essential: kind === 'bill',
+      essential: params.essential ? params.essential === 'true' : kind === 'bill',
       active: true,
       skipped: [],
       tags: [],

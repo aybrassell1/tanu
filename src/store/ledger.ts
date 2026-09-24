@@ -772,6 +772,16 @@ export const ledger = {
     commit((d) => ({ ...d, settings: { ...d.settings, ...patch } }));
   },
 
+  /** Stops a detected charge being offered as a bill again. */
+  ignoreRecurringSuggestion(key: string) {
+    commit((d) => ({ ...d, settings: { ...d.settings, ignoredRecurring: [...new Set([...(d.settings.ignoredRecurring ?? []), key])] } }), 'Suggestion dismissed');
+  },
+
+  /** Offers every dismissed charge again. */
+  clearIgnoredRecurring() {
+    commit((d) => ({ ...d, settings: { ...d.settings, ignoredRecurring: [] } }), 'Dismissed suggestions restored');
+  },
+
   setDashboard(order: DashboardWidgetId[], hidden: DashboardWidgetId[]) {
     commit((d) => ({ ...d, settings: { ...d.settings, dashboard: { order, hidden } } }));
   },

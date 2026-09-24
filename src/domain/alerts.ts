@@ -6,6 +6,7 @@ import { balanceOn, indexLedger, creditInfo } from './ledger';
 import { needsCategory, tidySummary } from './merchants';
 import { formatMoney } from './money';
 import { detectPriceChanges, priceChangeAlerts } from './priceChanges';
+import { candidateTotals, detectRecurring } from './recurringDetect';
 import { monthBudgets } from './budgets';
 import { iouBalance, iouSummary } from './ious';
 import { daysUntilRenewal, isWarranty, policySummary } from './policies';
@@ -167,6 +168,19 @@ export function buildAlerts(data: LedgerData, today: ISODate, format?: (cents: n
       title: `${fund.name} needs ${money(status.shortfall)} more`,
       detail: status.overdue ? `Due ${formatDate(fund.dueDate!)}` : `Due ${relativePhrase(fund.dueDate!, today)} · ${money(status.requiredMonthly ?? status.monthly)}/mo to get there`,
       href: '/sinking',
+    });
+  }
+
+  // A bill the app doesn't know about is missing from every forecast.
+  const untracked = candidateTotals(detectRecurring(data, today).filter((c) => c.status === 'active'));
+  if (untracked.count > 0) {
+    alerts.push({
+      id: 'recurring:found',
+      severity: 'info',
+      icon: 'repeat',
+      title: untracked.count === 1 ? '1 charge looks like a bill you don’t track' : `${untracked.count} charges look like bills you don’t track`,
+      detail: `About ${money(untracked.monthly)} a month, missing from your forecast`,
+      href: '/bills/detected',
     });
   }
 

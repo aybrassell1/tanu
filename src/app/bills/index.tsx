@@ -1,14 +1,15 @@
 import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { EventLine, useEventActions } from '@/components/bills/EventActions';
 import { RECURRING_GROUPS } from '@/components/bills/helpers';
 import { RecurringRow } from '@/components/bills/RecurringRow';
-import { Button, EmptyState, IconButton, ListCard, Money, NavHeader, Screen, Section, Segmented, StatTile, Text, useOverlay } from '@/components/ui';
+import { Banner, Button, EmptyState, IconButton, ListCard, Money, NavHeader, Screen, Section, Segmented, StatTile, Text, useOverlay } from '@/components/ui';
 import { addDays, monthOf } from '@/domain/dates';
 import { sum } from '@/domain/money';
 import { monthlyEquivalent } from '@/domain/recurrence';
+import { candidateTotals, detectRecurring } from '@/domain/recurringDetect';
 import { monthlyObligations, openEvents, scheduledEvents, type ScheduledEvent } from '@/domain/schedule';
 import type { RecurringItem } from '@/domain/types';
 import { useData, useMoney, useToday } from '@/store/hooks';
@@ -29,6 +30,9 @@ export default function BillsScreen() {
   const actions = useEventActions();
   const [tab, setTab] = useState<Tab>('upcoming');
   const [showPaid, setShowPaid] = useState(false);
+
+  // Charges that arrive on a rhythm but aren't tracked yet.
+  const detected = useMemo(() => candidateTotals(detectRecurring(data, today)), [data, today]);
 
   const model = useMemo(() => {
     const active = data.recurring.filter((r) => r.active);
@@ -66,6 +70,19 @@ export default function BillsScreen() {
         <StatTile label="Next 30d" icon="calendar" value={<Money cents={model.next30} variant="h3" whole />} caption={model.next30Overdue ? 'Expected · incl. past due' : 'Expected'} />
         <StatTile label="Autopay" icon="zap" value={`${model.autopay} of ${model.active.length}`} caption="Active items" />
       </View>
+
+      {/* Bills you already pay but haven't told the app about are missing from
+          every forecast, so they get a way in before the lists. */}
+      {detected.count > 0 && (
+        <Pressable onPress={() => router.push('/bills/detected')} accessibilityRole="button" accessibilityLabel="Review charges that look recurring">
+          <Banner
+            tone="primary"
+            icon="repeat"
+            title={detected.count === 1 ? '1 charge looks like a bill you don’t track' : `${detected.count} charges look like bills you don’t track`}
+            message={`About ${money(detected.monthly, { whole: true })} a month, found in what you already spent. Tap to review.`}
+          />
+        </Pressable>
+      )}
 
       <Segmented
         items={[
