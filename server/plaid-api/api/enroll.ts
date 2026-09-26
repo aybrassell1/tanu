@@ -6,7 +6,7 @@
  * a connection removes the record — there is no copy kept for later.
  */
 
-import { cors, dropItem, getItem, putItem, sameSecret, seal, type PushSubscriptionJSON } from './_lib.js';
+import { cors, dropItem, getItem, plaid, putItem, sameSecret, seal, type PushSubscriptionJSON } from './_lib.js';
 
 interface Req {
   method?: string;
@@ -60,7 +60,20 @@ export default async function handler(req: Req, res: Res) {
       institution: typeof body.institution === 'string' ? body.institution : existing?.institution,
       updatedAt: new Date().toISOString(),
     });
-    return res.status(200).json({ ok: true, watching: true });
+    // Point the item at this deployment, so Plaid knows where to call. Doing
+    // it here means an existing connection starts sending webhooks without
+    // being reconnected, and nothing has to be set by hand in the dashboard.
+    let webhookSet = false;
+    const host = String(req.headers['x-forwarded-host'] ?? req.headers.host ?? '');
+    if (host) {
+      try {
+        await plaid(env, '/item/webhook/update', { access_token: accessToken, webhook: `https://${host}/api/webhook` });
+        webhookSet = true;
+      } catch {
+        // Worth saying, not worth failing: the dashboard can set it instead.
+      }
+    }
+    return res.status(200).json({ ok: true, watching: true, webhookSet });
   } catch (e) {
     return res.status(500).json({ error: 'enroll_failed', detail: e instanceof Error ? e.message : String(e) });
   }

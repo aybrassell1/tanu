@@ -78,14 +78,14 @@ notifications off in the app deletes the record.
 
    `ENCRYPTION_KEY` and `VAPID_PRIVATE_KEY` are Secret; the public key is not.
 
-3. **Tell Plaid where to call.** In the Plaid dashboard, set the webhook to
-   `https://your-project.vercel.app/api/webhook`. Existing connections need
-   reconnecting to pick it up; new ones get it automatically.
-
-4. **In the app**, put `VAPID_PUBLIC_KEY` in the notification key field on the
+3. **In the app**, put `VAPID_PUBLIC_KEY` in the notification key field on the
    Connected accounts screen, then turn the switch on. **iOS only allows this
    from an app added to the home screen** — in a browser tab the switch says so
    and stays off.
+
+Turning the switch on points each connected bank at this deployment for you, so
+nothing needs setting by hand in the Plaid dashboard and nothing needs
+reconnecting.
 
 Webhooks that are not signed by Plaid, are older than five minutes, or whose
 body doesn't match the signature are dropped without a word.
