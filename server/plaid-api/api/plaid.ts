@@ -29,7 +29,7 @@ interface Res {
 
 const PLAID_HOSTS: Record<string, string> = {
   sandbox: 'https://sandbox.plaid.com',
-  production: 'https://api.plaid.com',
+  production: 'https://production.plaid.com',
 };
 
 /**
