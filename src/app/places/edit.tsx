@@ -1,19 +1,21 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 
+import { FeeEditor } from '@/components/places/FeeEditor';
 import { Banner, Button, ChipSelect, DateField, MoneyField, NavHeader, NumberField, Screen, Section, Stack, SwitchRow, TextField, useOverlay } from '@/components/ui';
 import { UTILITIES, newPlace, placeCost } from '@/domain/places';
-import type { Cents, Place } from '@/domain/types';
+import type { Place, PlaceFee } from '@/domain/types';
 import { goBackOr } from '@/lib/navigation';
 import { useData, useMoney, useToday } from '@/store/hooks';
 import { ledger } from '@/store/ledger';
-import { colors } from '@/theme/tokens';
 
 type Draft = Omit<Place, 'id' | 'createdAt' | 'updatedAt'> & { id?: string };
 
 /**
- * The numbers a listing does not advertise. Everything here is optional except
- * a name: a place added in the car park with just a rent is still worth having.
+ * The numbers a listing does not advertise. Everything is optional except a
+ * name: a place added in the car park with just a rent is still worth having,
+ * and every cost beyond the rent is named, so next week you still know what
+ * the $35 was for.
  */
 export default function PlaceEditScreen() {
   const { id } = useLocalSearchParams<{ id?: string }>();
@@ -27,6 +29,7 @@ export default function PlaceEditScreen() {
   const [draft, setDraft] = useState<Draft>(() => (existing ? { ...existing } : { ...newPlace(), touredOn: today }));
   const [errors, setErrors] = useState<Record<string, string>>({});
   const set = <K extends keyof Draft>(key: K, value: Draft[K]) => setDraft((d) => ({ ...d, [key]: value }));
+  const setFees = (fees: PlaceFee[]) => set('fees', fees);
 
   const cost = placeCost({ ...draft, id: 'draft', createdAt: '', updatedAt: '' } as Place);
 
@@ -46,49 +49,50 @@ export default function PlaceEditScreen() {
       <Stack>
         <TextField label="Name" value={draft.name} onChangeText={(v) => set('name', v)} placeholder="Maple Court, unit 3B" error={errors.name} />
         <TextField label="Address" value={draft.address ?? ''} onChangeText={(v) => set('address', v)} placeholder="Where it is" optional />
-        <DateField label="Toured on" value={draft.touredOn ?? today} onChange={(v) => set('touredOn', v)} />
+        <DateField label="Toured on" value={draft.touredOn} onChange={(v) => set('touredOn', v)} clearable />
       </Stack>
 
-      <Section title="Every month" subtitle="What you would actually pay">
+      <Section title="Rent">
         <Stack>
-          <MoneyField label="Rent" value={draft.rent} onChange={(v) => set('rent', v ?? 0)} />
+          <MoneyField label="Rent" value={draft.rent || undefined} onChange={(v) => set('rent', v ?? 0)} />
           <ChipSelect
             label="Included in the rent"
             options={UTILITIES.map((u) => ({ value: u.id, label: u.label }))}
             value={draft.included}
             onChange={(v) => set('included', draft.included.includes(v) ? draft.included.filter((x) => x !== v) : [...draft.included, v])}
-            hint="Tap what the rent covers. Anything left is yours to pay."
+            hint="Tap what the rent covers. Anything left is yours to pay — add it below."
           />
-          <MoneyField label="Utilities you would pay" value={draft.utilitiesEstimate} onChange={(v) => set('utilitiesEstimate', v ?? 0)} hint="Ask them for a summer and a winter average." optional />
-          <MoneyField label="Parking" value={draft.parking} onChange={(v) => set('parking', v ?? 0)} optional />
-          <MoneyField label="Pet rent" value={draft.petRent} onChange={(v) => set('petRent', v ?? 0)} optional />
-          <MoneyField label="Other monthly fees" value={draft.otherMonthly} onChange={(v) => set('otherMonthly', v ?? 0)} hint="Amenity, trash, valet, pest, package locker." optional />
-          <MoneyField label="Renter's insurance" value={draft.insurance} onChange={(v) => set('insurance', v ?? 0)} hint="Usually required. Often $10–25 a month." optional />
         </Stack>
-        {cost.monthly > 0 && (
-          <Banner
-            tone={cost.aboveRent > 0 ? 'primary' : 'muted'}
-            icon="dollar-sign"
-            title={`${money(cost.monthly)} a month, all in`}
-            message={cost.aboveRent > 0 ? `${money(cost.aboveRent)} a month on top of the rent.` : 'Add utilities and fees to see the real number.'}
-          />
-        )}
       </Section>
 
-      <Section title="Before you get the keys">
+      <Section title="Every month, on top of rent" subtitle="Name each one, so a number still means something next week">
+        <FeeEditor when="monthly" fees={draft.fees} onChange={setFees} emptyHint="Tap a fee to add it, or add your own. Utilities count toward the 30% rule; the rest are just costs." />
+      </Section>
+
+      <Section title="Due at signing">
         <Stack>
-          <MoneyField label="Security deposit" value={draft.deposit} onChange={(v) => set('deposit', v ?? 0)} optional />
-          <MoneyField label="Admin or move-in fee" value={draft.adminFee} onChange={(v) => set('adminFee', v ?? 0)} optional />
-          <MoneyField label="Application fee" value={draft.applicationFee} onChange={(v) => set('applicationFee', v ?? 0)} optional />
-          <MoneyField label="Pet deposit" value={draft.petDeposit} onChange={(v) => set('petDeposit', v ?? 0)} optional />
+          <FeeEditor when="upfront" fees={draft.fees} onChange={setFees} emptyHint="Deposit, admin and application fees — anything they want before the keys." />
           <SwitchRow label="First month's rent due at signing" value={draft.firstMonthUpfront} onChange={(v) => set('firstMonthUpfront', v)} />
         </Stack>
       </Section>
 
+      {cost.monthly > 0 && (
+        <Banner
+          tone="primary"
+          icon="dollar-sign"
+          title={`${money(cost.monthly)} a month, all in`}
+          message={
+            cost.aboveRent > 0
+              ? `${money(cost.aboveRent)} on top of the rent, and ${money(cost.upfront)} before you get the keys.`
+              : 'Rent only so far. Add the fees and utilities to see the real number.'
+          }
+        />
+      )}
+
       <Section title="The lease">
         <Stack>
           <NumberField label="Lease length, months" value={draft.leaseMonths} onChange={(v) => set('leaseMonths', v)} optional />
-          <DateField label="Available from" value={draft.availableOn ?? ''} onChange={(v) => set('availableOn', v)} optional />
+          <DateField label="Available from" value={draft.availableOn} onChange={(v) => set('availableOn', v)} optional clearable />
           <NumberField label="Income they require, × rent" value={draft.incomeMultiple} onChange={(v) => set('incomeMultiple', v)} hint="Commonly 2.5 or 3 times the monthly rent, gross." optional />
           <NumberField label="Commute, minutes" value={draft.commuteMinutes} onChange={(v) => set('commuteMinutes', v)} optional />
         </Stack>

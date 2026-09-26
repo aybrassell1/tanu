@@ -2,7 +2,7 @@ import { TRANSACTION_TYPES } from './catalog';
 import { categoryPath } from './categories';
 import { todayISO } from './dates';
 import { buildDefaultCategories, LEGACY_CATEGORY_MAP } from './defaultCategories';
-import { defaultSettings, defaultTaxProfile, emptyLedger, SCHEMA_VERSION } from './factory';
+import { createId, defaultSettings, defaultTaxProfile, emptyLedger, SCHEMA_VERSION } from './factory';
 import { indexLedger } from './ledger';
 import { centsToInput } from './money';
 import type { LedgerData } from './types';
@@ -80,7 +80,40 @@ export function migrate(data: LedgerData): LedgerData {
   if (version < 2) out = migrateToV2(out);
   if (version < 3) out = migrateToV3(out);
   if (version < 4) out = migrateToV4(out);
+  if (version < 5) out = migrateToV5(out);
   return { ...out, meta: { ...out.meta, schemaVersion: SCHEMA_VERSION } };
+}
+
+type LegacyPlace = {
+  parking?: number; petRent?: number; otherMonthly?: number; utilitiesEstimate?: number; insurance?: number;
+  deposit?: number; applicationFee?: number; adminFee?: number; petDeposit?: number;
+};
+
+/** v5: a place's costs became a named list, and you can add your own questions. */
+function migrateToV5(data: LedgerData): LedgerData {
+  const named: [keyof LegacyPlace, string, 'monthly' | 'upfront', boolean?][] = [
+    ['utilitiesEstimate', 'Utilities', 'monthly', true],
+    ['parking', 'Parking', 'monthly'],
+    ['petRent', 'Pet rent', 'monthly'],
+    ['otherMonthly', 'Monthly fees', 'monthly'],
+    ['insurance', "Renter's insurance", 'monthly'],
+    ['deposit', 'Security deposit', 'upfront'],
+    ['adminFee', 'Admin fee', 'upfront'],
+    ['applicationFee', 'Application fee', 'upfront'],
+    ['petDeposit', 'Pet deposit', 'upfront'],
+  ];
+  return {
+    ...data,
+    tourQuestions: Array.isArray(data.tourQuestions) ? data.tourQuestions : [],
+    places: (Array.isArray(data.places) ? data.places : []).map((place) => {
+      if (Array.isArray(place.fees)) return place;
+      const old = place as unknown as LegacyPlace;
+      const fees = named
+        .filter(([key]) => (old[key] ?? 0) > 0)
+        .map(([key, label, when, utility]) => ({ id: createId('fee'), label, amount: old[key] as number, when, ...(utility ? { utility: true } : {}) }));
+      return { ...place, fees };
+    }),
+  };
 }
 
 /** v4: places you tour while apartment hunting. */

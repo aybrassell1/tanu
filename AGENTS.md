@@ -56,6 +56,8 @@ Commands: `npm run typecheck`, `npm test` (vitest, domain logic), `npm run web`.
 ## Apartment tours
 
 - `domain/places.ts` holds the tour checklist (`TOUR_QUESTIONS`), what a place really costs (`placeCost`) and the grade (`scorePlace`, `rankPlaces`). Screens: `/places`, `/places/[id]` (the surface you hold on the tour) and `/places/edit` (the numbers).
+- Every cost beyond the rent is a named line in `place.fees` (`label`, `amount`, `when: 'monthly' | 'upfront'`, `utility?`, `estimated?`). Never collapse them into one total: "$155 of fees" tells you nothing a week later. `FEE_PRESETS` are one-tap labels; anything else is typed. Only lines flagged `utility` count toward the 30%-of-income housing share.
+- Questions the user adds live in `data.tourQuestions` and apply to every place; `tourQuestions(custom)` merges them with the built-in list, and a yes/no one scores like any other.
 - The grade is 55 points for affordability (through `rentAffordability`, so it matches the rent calculator), 25 for your 1–5 ratings and 20 for the scored yes/no questions. **An unanswered question never counts against a place**, and a part you have not filled in is never named as the weak one.
 - With no income recorded `scorePlace` returns `grade: null` and `basis: 'no_income'`: a letter there would be a guess dressed up as a judgement.
 - `data.places` are notes, not money. They never post to balances, never appear in the forecast, and only moving in and recording the rent changes anything.

@@ -354,11 +354,12 @@ export function DateField({ label, value, onChange, error, hint, optional, short
   const [open, setOpen] = useState(false);
   const today = todayISO();
   const { weekStartsOn } = useSettings();
-  const [month, setMonth] = useState(monthOf(value ?? today));
+  // An empty string is a date field that has never been filled in, not a date.
+  const [month, setMonth] = useState(monthOf(value || today));
   return (
     <>
       <View style={{ gap: 8 }}>
-        <PickerButton label={label} valueLabel={value ? formatDate(value, 'weekday', today) : undefined} placeholder="Pick a date" icon="calendar" onPress={() => { setMonth(monthOf(value ?? today)); setOpen(true); }} error={error} hint={hint} optional={optional} />
+        <PickerButton label={label} valueLabel={value ? formatDate(value, 'weekday', today) : undefined} placeholder="Pick a date" icon="calendar" onPress={() => { setMonth(monthOf(value || today)); setOpen(true); }} error={error} hint={hint} optional={optional} />
         {shortcuts && (
           <View style={styles.chips}>
             <Pill label="Today" size="sm" selected={value === today} onPress={() => onChange(today)} />

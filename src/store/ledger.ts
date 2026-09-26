@@ -31,6 +31,7 @@ import type {
   Scenario,
   Iou,
   IouEntry,
+  CustomTourQuestion,
   Place,
   PlaceStatus,
   Policy,
@@ -826,6 +827,27 @@ export const ledger = {
 
   setPlaceNotes(id: ID, notes: string) {
     commit((d) => ({ ...d, places: d.places.map((p) => (p.id === id ? { ...p, notes: notes.trim() || undefined, updatedAt: nowStamp() } : p)) }), 'Notes saved');
+  },
+
+  /** A question you thought of on a tour, kept for every place after it. */
+  addTourQuestion(label: string, kind: 'yesno' | 'note'): Result {
+    const text = label.trim();
+    if (!text) return fail({ label: 'Write the question first.' });
+    const question: CustomTourQuestion = { id: createId('q'), label: text, kind, createdAt: nowStamp() };
+    commit((d) => ({ ...d, tourQuestions: [...(d.tourQuestions ?? []), question] }), 'Question added');
+    return ok(question.id);
+  },
+
+  /** Removes the question everywhere, and the answers recorded against it. */
+  deleteTourQuestion(id: ID) {
+    commit(
+      (d) => ({
+        ...d,
+        tourQuestions: (d.tourQuestions ?? []).filter((q) => q.id !== id),
+        places: d.places.map((p) => ({ ...p, answers: p.answers.filter((a) => a.id !== id) })),
+      }),
+      'Question removed',
+    );
   },
 
   setPlaceStatus(id: ID, status: PlaceStatus) {

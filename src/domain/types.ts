@@ -691,6 +691,15 @@ export interface LedgerMeta {
 
 export type PlaceStatus = 'touring' | 'shortlist' | 'applied' | 'chosen' | 'passed';
 
+/** A question you thought of on a tour; it shows up on every place after that. */
+export interface CustomTourQuestion {
+  id: ID;
+  label: string;
+  /** `yesno` counts toward the fit score; `note` is just something to write down. */
+  kind: 'yesno' | 'note';
+  createdAt: Timestamp;
+}
+
 /** An answer to one of the questions worth asking on a tour. */
 export interface PlaceAnswer {
   /** Question id from `TOUR_QUESTIONS`. */
@@ -698,6 +707,24 @@ export interface PlaceAnswer {
   /** For a yes/no question. */
   answer?: 'yes' | 'no' | 'unsure';
   /** What they actually said; the only place free text belongs. */
+  note?: string;
+}
+
+export type FeeWhen = 'monthly' | 'upfront';
+
+/**
+ * One named cost on top of the rent. Named, because "$155 of fees" tells you
+ * nothing a week later: valet trash $35, amenity $45, parking $75 does.
+ */
+export interface PlaceFee {
+  id: ID;
+  label: string;
+  amount: Cents;
+  when: FeeWhen;
+  /** Counts as housing for the 30%-of-income rule, like electric or water. */
+  utility?: boolean;
+  /** Their estimate rather than a fixed charge. */
+  estimated?: boolean;
   note?: string;
 }
 
@@ -718,23 +745,11 @@ export interface Place {
   status: PlaceStatus;
   touredOn?: ISODate;
 
-  // Monthly
   rent: Cents;
-  parking: Cents;
-  petRent: Cents;
-  /** Amenity, trash, valet, pest — the fees that arrive every month. */
-  otherMonthly: Cents;
-  /** What you would pay on top for anything not included. */
-  utilitiesEstimate: Cents;
-  insurance: Cents;
+  /** Everything else, each one named: monthly fees, utilities and what is due at signing. */
+  fees: PlaceFee[];
   /** Utility ids the rent covers, so they are never counted twice. */
   included: string[];
-
-  // Up front
-  deposit: Cents;
-  applicationFee: Cents;
-  adminFee: Cents;
-  petDeposit: Cents;
   /** Whether the first month's rent is also due at signing. */
   firstMonthUpfront: boolean;
 
@@ -779,4 +794,6 @@ export interface LedgerData {
   scenarios: Scenario[];
   /** Places you have toured while looking for somewhere to live. */
   places: Place[];
+  /** Questions you added to the tour checklist yourself. */
+  tourQuestions: CustomTourQuestion[];
 }

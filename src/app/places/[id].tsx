@@ -3,10 +3,10 @@ import { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { GradeBadge, RatingRow, StatusPicker } from '@/components/places/Parts';
-import { Banner, Button, Card, Disclosure, EmptyState, IconButton, KeyValue, Money, NavHeader, Pill, ProgressBar, Row, Screen, Section, Text, TextField, useOverlay } from '@/components/ui';
+import { Banner, Button, Card, Disclosure, EmptyState, IconButton, KeyValue, Money, NavHeader, Pill, ProgressBar, Row, Screen, Section, Sheet, Text, TextField, useOverlay } from '@/components/ui';
 import { financialSnapshot } from '@/domain/affordability';
 import { formatDate } from '@/domain/dates';
-import { PLACE_STATUS, RATINGS, TOUR_QUESTIONS, checklistProgress, scorePlace, unanswered } from '@/domain/places';
+import { CUSTOM_GROUP, RATINGS, checklistProgress, scorePlace, tourQuestions, unanswered } from '@/domain/places';
 import type { Place, PlaceAnswer } from '@/domain/types';
 import { useData, useDerived, useMoney, useToday } from '@/store/hooks';
 import { ledger } from '@/store/ledger';
@@ -41,9 +41,11 @@ export default function PlaceScreen() {
     );
   }
 
-  const scored = scorePlace(snapshot, place);
-  const progress = checklistProgress(place);
-  const left = unanswered(place);
+  const custom = data.tourQuestions ?? [];
+  const questions = tourQuestions(custom);
+  const scored = scorePlace(snapshot, place, custom);
+  const progress = checklistProgress(place, custom);
+  const left = unanswered(place, custom);
   const answerFor = (questionId: string): PlaceAnswer | undefined => place.answers.find((a) => a.id === questionId);
 
   const remove = async () => {
@@ -53,7 +55,7 @@ export default function PlaceScreen() {
     router.back();
   };
 
-  const groups = [...new Set(TOUR_QUESTIONS.map((q) => q.group))];
+  const groups = [...new Set(questions.map((q) => q.group))];
 
   return (
     <Screen
@@ -135,7 +137,7 @@ export default function PlaceScreen() {
           onPress={() =>
             router.push({
               pathname: '/afford/rent',
-              params: { rent: String(place.rent), utilities: String(place.utilitiesEstimate), insurance: String(place.insurance), other: String(place.parking + place.petRent + place.otherMonthly), moveIn: String(scored.cost.upfront) },
+              params: { rent: String(place.rent), utilities: String(scored.cost.utilities), insurance: '0', other: String(scored.cost.aboveRent - scored.cost.utilities), moveIn: String(scored.cost.upfront) },
             })
           }
         />
@@ -160,9 +162,9 @@ export default function PlaceScreen() {
           />
         )}
         {groups.map((group) => (
-          <Disclosure key={group} label={group} initiallyOpen={group === 'Money'}>
+          <Disclosure key={group} label={group} initiallyOpen={group === 'Money' || group === CUSTOM_GROUP}>
             <View style={{ gap: spacing.lg }}>
-              {TOUR_QUESTIONS.filter((q) => q.group === group).map((q) => {
+              {questions.filter((q) => q.group === group).map((q) => {
                 const a = answerFor(q.id);
                 return (
                   <View key={q.id} style={{ gap: spacing.xs }}>
@@ -193,6 +195,7 @@ export default function PlaceScreen() {
             </View>
           </Disclosure>
         ))}
+        <AddQuestion />
       </Section>
 
       <Section title="Anything else">
@@ -224,6 +227,38 @@ function useAutoSave(text: string, saved: string, save: () => void) {
     const timer = setTimeout(() => latest.current(), 600);
     return () => clearTimeout(timer);
   }, [text, saved]);
+}
+
+/** A question you thought of here shows up on every place from now on. */
+function AddQuestion() {
+  const [open, setOpen] = useState(false);
+  const [label, setLabel] = useState('');
+  const [kind, setKind] = useState<'note' | 'yesno'>('note');
+  const add = () => {
+    const text = label.trim();
+    if (!text) return;
+    ledger.addTourQuestion(text, kind);
+    setLabel('');
+    setOpen(false);
+  };
+  return (
+    <>
+      <Button label="Add your own question" icon="plus" variant="secondary" fullWidth onPress={() => setOpen(true)} />
+      <Sheet visible={open} onClose={() => setOpen(false)} title="Add a question">
+        <View style={{ gap: spacing.md }}>
+          <TextField label="What do you want to ask?" value={label} onChangeText={setLabel} placeholder="Is the water heater shared?" autoFocus onSubmitEditing={add} />
+          <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+            <Pill size="sm" label="Just a note" selected={kind === 'note'} onPress={() => setKind('note')} />
+            <Pill size="sm" label="Yes or no" selected={kind === 'yesno'} onPress={() => setKind('yesno')} />
+          </View>
+          <Text variant="caption" color={colors.textTertiary}>
+            A yes/no question counts toward the grade, the same as the built-in ones. It will appear on every place you tour.
+          </Text>
+          <Button label="Add it" size="lg" fullWidth onPress={add} />
+        </View>
+      </Sheet>
+    </>
+  );
 }
 
 function PlaceNotes({ placeId, value, notes, setNotes }: { placeId: string; value: string; notes: string; setNotes: (v: string) => void }) {

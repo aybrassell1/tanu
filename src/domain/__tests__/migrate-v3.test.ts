@@ -33,6 +33,34 @@ describe('schema v3 migration', () => {
     expect(warnings.some((w) => w.toLowerCase().includes('error'))).toBe(false);
   });
 
+  it('turns a v4 place\'s fixed cost fields into named lines', () => {
+    const raw = JSON.parse(JSON.stringify(emptyLedger()));
+    raw.meta.schemaVersion = 4;
+    raw.places = [
+      {
+        id: 'p1', name: 'Maple Court', status: 'touring', rent: 150_000,
+        parking: 7_500, petRent: 0, otherMonthly: 4_500, utilitiesEstimate: 12_000, insurance: 1_500,
+        deposit: 150_000, applicationFee: 7_500, adminFee: 25_000, petDeposit: 0,
+        included: ['water'], firstMonthUpfront: true, answers: [], ratings: [], photos: [], tags: [],
+        createdAt: '2026-09-25T00:00:00.000Z', updatedAt: '2026-09-25T00:00:00.000Z',
+      },
+    ];
+    const { data } = parseBackup(JSON.stringify({ format: 'masterfinance-backup', version: 4, exportedAt: '2026-09-25T00:00:00.000Z', data: raw }));
+    const fees = data.places[0].fees;
+    // A zero stays out; everything else keeps the label it used to have.
+    expect(fees.map((f) => [f.label, f.amount, f.when])).toEqual([
+      ['Utilities', 12_000, 'monthly'],
+      ['Parking', 7_500, 'monthly'],
+      ['Monthly fees', 4_500, 'monthly'],
+      ["Renter's insurance", 1_500, 'monthly'],
+      ['Security deposit', 150_000, 'upfront'],
+      ['Admin fee', 25_000, 'upfront'],
+      ['Application fee', 7_500, 'upfront'],
+    ]);
+    expect(fees.find((f) => f.label === 'Utilities')?.utility).toBe(true);
+    expect(data.tourQuestions).toEqual([]);
+  });
+
   it('round-trips a v3 backup with the new records intact', () => {
     const sample = buildSampleLedger('2026-09-17');
     const restored = parseBackup(serializeBackup(sample)).data;
