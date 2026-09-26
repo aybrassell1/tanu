@@ -4,10 +4,12 @@ import { View } from 'react-native';
 
 import { accountOptions } from '@/components/finance/Pickers';
 import { Banner, Button, Card, Disclosure, EmptyState, KeyValue, ListRow, Money, NavHeader, Pill, Row, Screen, Section, SelectField, SwitchRow, Text, TextField, useOverlay } from '@/components/ui';
-import { balanceChecks, balanceDisagreements } from '@/domain/balanceCheck';
+import { balanceChecks, balanceDisagreements, bankBalanceOf } from '@/domain/balanceCheck';
+import { ENTITY_COLORS } from '@/domain/catalog';
+import { draftAccountFrom } from '@/domain/plaidAccounts';
 import { relativePhrase } from '@/domain/dates';
 import { isSandbox } from '@/domain/plaidSync';
-import type { BankConnection } from '@/domain/types';
+import type { BankConnection, ConnectedAccount } from '@/domain/types';
 import { accounts as fetchAccounts, exchange, institutionName, linkToken, PlaidError, type BankApi } from '@/lib/plaid';
 import { linkSupported, openLink } from '@/lib/plaidLink';
 import { useData, useMoney, useSettings, useToday } from '@/store/hooks';
@@ -41,6 +43,19 @@ export default function ConnectScreen() {
   const off = balanceDisagreements(checks);
   const options = useMemo(() => accountOptions(data, today), [data, today]);
 
+  /**
+   * Creates the account from what the bank said and points the connection at
+   * it. It opens at the balance the bank reports, so the number is right
+   * immediately; history that arrives later still shows in reports.
+   */
+  const createAndMap = (connection: BankConnection, account: ConnectedAccount) => {
+    const color = ENTITY_COLORS[data.accounts.length % ENTITY_COLORS.length];
+    const result = ledger.saveAccount(draftAccountFrom(account, today, color));
+    if (!result.ok) return setError(Object.values(result.errors)[0] ?? 'That account could not be created.');
+    ledger.mapConnectionAccount(connection.id, account.externalId, result.id);
+    toast({ message: `${account.name} added`, actionLabel: 'Undo', onAction: ledger.undo });
+  };
+
   const saveApi = () => {
     const trimmed = url.trim().replace(/\/+$/, '');
     if (!trimmed || !key.trim()) return setError('Both the address and the key are needed.');
@@ -70,7 +85,17 @@ export default function ConnectScreen() {
         itemId: item_id,
         institutionName: name,
         accessToken: access_token,
-        accounts: info.accounts.map((a) => ({ externalId: a.account_id, name: a.official_name || a.name, mask: a.mask ?? undefined, type: a.type, subtype: a.subtype ?? undefined })),
+        // The balances come with this call, so an account made from one of
+        // these opens at the right number rather than at zero.
+        accounts: info.accounts.map((a) => ({
+          externalId: a.account_id,
+          name: a.official_name || a.name,
+          mask: a.mask ?? undefined,
+          type: a.type,
+          subtype: a.subtype ?? undefined,
+          lastBalance: bankBalanceOf(a.balances),
+          lastBalanceAt: new Date().toISOString(),
+        })),
       });
       if (result.ok) toast({ message: `${name} connected — now point its accounts at yours` });
     } catch (e) {
@@ -180,16 +205,26 @@ export default function ConnectScreen() {
                     <Disclosure label="Which account is which" initiallyOpen={mapped === 0}>
                       <View style={{ gap: spacing.md }}>
                         {connection.accounts.map((a) => (
-                          <SelectField
-                            key={a.externalId}
-                            label={`${a.name}${a.mask ? ` ••${a.mask}` : ''}`}
-                            hint={`${a.type}${a.subtype ? ` · ${a.subtype}` : ''}`}
-                            value={a.accountId}
-                            options={options}
-                            onChange={(id) => ledger.mapConnectionAccount(connection.id, a.externalId, id)}
-                            placeholder="Don't sync this one"
-                            optional
-                          />
+                          <View key={a.externalId} style={{ gap: 6 }}>
+                            <SelectField
+                              label={`${a.name}${a.mask ? ` ••${a.mask}` : ''}`}
+                              hint={`${a.type}${a.subtype ? ` · ${a.subtype}` : ''}`}
+                              value={a.accountId}
+                              options={options}
+                              onChange={(id) => ledger.mapConnectionAccount(connection.id, a.externalId, id)}
+                              placeholder={options.length === 0 ? 'No accounts here yet' : "Don't sync this one"}
+                              optional
+                            />
+                            {!a.accountId && (
+                              <Button
+                                label={`Add "${a.name}" as a new account`}
+                                icon="plus"
+                                variant="ghost"
+                                size="sm"
+                                onPress={() => createAndMap(connection, a)}
+                              />
+                            )}
+                          </View>
                         ))}
                         <Text variant="caption" color={colors.textTertiary}>
                           An account you leave unlinked is ignored entirely. Nothing from it is imported.
