@@ -26,6 +26,8 @@ export interface AutoSyncOutcome {
   added: number;
   /** Rows that were found but left for you, when adding automatically is off. */
   waiting: number;
+  /** Card payments with no connected account to have come from. */
+  needsPair: number;
   error?: string;
 }
 
@@ -59,7 +61,7 @@ export async function runAutoSync(data: LedgerData, now = Date.now()): Promise<A
       const drafts = plan.rows.filter((r) => r.draft);
 
       if (!autoAdd) {
-        outcomes.push({ connection, added: 0, waiting: drafts.length });
+        outcomes.push({ connection, added: 0, waiting: drafts.length, needsPair: plan.counts.needs_pair });
         continue;
       }
 
@@ -69,7 +71,7 @@ export async function runAutoSync(data: LedgerData, now = Date.now()): Promise<A
         removeIds: plan.removed,
         cursor: payload.next_cursor,
       });
-      outcomes.push({ connection, added: result.ok ? result.id : 0, waiting: 0 });
+      outcomes.push({ connection, added: result.ok ? result.id.added : 0, waiting: 0, needsPair: plan.counts.needs_pair });
     } catch (e) {
       const message = e instanceof PlaidError ? e.message : 'Could not reach your bank.';
       // Only a broken login is worth interrupting you about; everything else
@@ -77,7 +79,7 @@ export async function runAutoSync(data: LedgerData, now = Date.now()): Promise<A
       if (e instanceof PlaidError && e.code === 'ITEM_LOGIN_REQUIRED') {
         ledger.flagConnection(connection.id, 'Your bank ended the connection. Reconnect to keep syncing.');
       }
-      outcomes.push({ connection, added: 0, waiting: 0, error: message });
+      outcomes.push({ connection, added: 0, waiting: 0, needsPair: 0, error: message });
     }
   }
   return outcomes;
@@ -133,9 +135,13 @@ export function useAutoSync(onDone: (outcomes: AutoSyncOutcome[]) => void) {
 export function summarize(outcomes: AutoSyncOutcome[]): string | null {
   const added = outcomes.reduce((n, o) => n + o.added, 0);
   const waiting = outcomes.reduce((n, o) => n + o.waiting, 0);
+  const needsPair = outcomes.reduce((n, o) => n + o.needsPair, 0);
   const broken = outcomes.filter((o) => o.error);
-  if (added > 0) return added === 1 ? 'Added 1 new transaction from your bank' : `Added ${added} new transactions from your bank`;
-  if (waiting > 0) return waiting === 1 ? '1 transaction is waiting for you' : `${waiting} transactions are waiting for you`;
+  // Something held back is worth a word even when everything else went in.
+  const held = needsPair > 0 ? `, ${needsPair} card ${needsPair === 1 ? 'payment needs' : 'payments need'} the other account` : '';
+  if (added > 0) return `${added === 1 ? 'Added 1 new transaction' : `Added ${added} new transactions`}${held}`;
+  if (waiting > 0) return `${waiting === 1 ? '1 transaction is waiting for you' : `${waiting} transactions are waiting for you`}${held}`;
+  if (needsPair > 0) return `${needsPair} card ${needsPair === 1 ? 'payment needs' : 'payments need'} the account it came from`;
   if (broken.length === outcomes.length && broken.length > 0) return broken[0].error ?? null;
   return null;
 }

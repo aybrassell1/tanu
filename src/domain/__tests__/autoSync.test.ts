@@ -39,7 +39,7 @@ function ledgerWith(connections: BankConnection[], transactions: Transaction[] =
 const hoursAgo = (n: number) => new Date(NOW - n * 3_600_000).toISOString();
 
 const syncAll = vi.fn((_token: string, _cursor?: string) => Promise.resolve<unknown>({}));
-const applySync = vi.fn((_id: string, _input: unknown) => ({ ok: true as const, id: 0 }));
+const applySync = vi.fn((_id: string, _input: unknown) => ({ ok: true as const, id: { added: 0, skipped: 0 } }));
 const flagConnection = vi.fn((_id: string, _reason?: string) => {});
 
 vi.mock('@/lib/plaid', async () => {
@@ -63,7 +63,7 @@ const emptyPayload = { added: [], modified: [], removed: [], next_cursor: 'c2', 
 
 beforeEach(() => {
   syncAll.mockReset().mockResolvedValue(emptyPayload);
-  applySync.mockReset().mockReturnValue({ ok: true, id: 0 });
+  applySync.mockReset().mockReturnValue({ ok: true, id: { added: 0, skipped: 0 } });
   flagConnection.mockReset();
 });
 
@@ -119,7 +119,7 @@ describe('catching up on open', () => {
       added: [{ transaction_id: 'p1', account_id: 'p_chk', amount: 12.5, date: '2026-09-25', name: 'CORNER CAFE' }],
       next_cursor: 'cursor_next',
     });
-    applySync.mockReturnValue({ ok: true, id: 1 });
+    applySync.mockReturnValue({ ok: true, id: { added: 1, skipped: 0 } });
 
     const outcomes = await runAutoSync(data, NOW);
     expect(applySync).toHaveBeenCalledOnce();

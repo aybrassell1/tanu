@@ -90,10 +90,12 @@ export default function SyncScreen() {
     const replace = toApply.filter((r) => r.replaces).map((r) => ({ id: r.replaces!, with: r.draft! }));
     const result = ledger.applySync(connection.id, { add, replace, removeIds: plan?.removed ?? [], cursor });
     if (!result.ok) return;
+    const { added, skipped } = result.id;
     toast({
-      message: result.id === 1 ? 'Added 1 transaction' : `Added ${result.id} transactions`,
+      message: `${added === 1 ? 'Added 1 transaction' : `Added ${added} transactions`}${skipped > 0 ? `, ${skipped} your ledger would not take` : ''}`,
       actionLabel: 'Undo',
       onAction: ledger.undo,
+      tone: skipped > 0 ? 'error' : undefined,
     });
     router.push('/connect');
   };
@@ -179,7 +181,7 @@ export default function SyncScreen() {
                     <Card key={row.externalId} onPress={() => toggle(row)} accessibilityLabel={`${row.label}, ${off ? 'skipped' : 'will be added'}`}>
                       <ListRow
                         icon={off ? 'square' : row.kind === 'transfer' ? 'repeat' : 'check-square'}
-                        title={row.label || 'No description'}
+                        title={row.draft?.description || row.label || 'Unnamed transaction'}
                         subtitle={`${formatDate(row.date, 'short', today)} · ${row.accountName}`}
                         trailing={<Money cents={row.amount} weight="semibold" />}
                         trailingCaption={row.replaces ? 'correction' : undefined}
@@ -202,7 +204,7 @@ export default function SyncScreen() {
                   <ListRow
                     key={row.externalId}
                     icon="check"
-                    title={row.label || 'No description'}
+                    title={row.draft?.description || row.label || 'Unnamed transaction'}
                     subtitle={`${formatDate(row.date, 'short', today)} · ${row.accountName}${row.pairedWith ? ' · other half of a transfer' : ''}`}
                     trailing={<Money cents={row.amount} color={colors.textTertiary} />}
                     dense

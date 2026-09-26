@@ -837,14 +837,17 @@ export const ledger = {
       removeIds?: ID[];
       cursor?: string;
     },
-  ): Result<number> {
+  ): Result<{ added: number; skipped: number }> {
     const data = get();
     const stamp = nowStamp();
     const prepared: Transaction[] = [];
+    let skipped = 0;
     for (const row of input.add) {
       const tx: Transaction = { ...row, id: row.id ?? createId('tx'), createdAt: stamp, updatedAt: stamp };
-      // A row that fails validation is skipped rather than breaking the sync.
-      if (!hasErrors(validateTransaction({ ...data, transactions: [...data.transactions, ...prepared] }, tx))) prepared.push(tx);
+      // A row the ledger would refuse is counted rather than swallowed: silent
+      // loss here shows up later as a balance nobody can explain.
+      if (hasErrors(validateTransaction({ ...data, transactions: [...data.transactions, ...prepared] }, tx))) skipped += 1;
+      else prepared.push(tx);
     }
     const replacements = new Map((input.replace ?? []).map((r) => [r.id, r.with]));
     const gone = new Set(input.removeIds ?? []);
@@ -862,7 +865,7 @@ export const ledger = {
       ],
       connections: d.connections.map((c) => (c.id === id ? { ...c, cursor: input.cursor ?? c.cursor, lastSyncedAt: stamp, needsAttention: undefined, updatedAt: stamp } : c)),
     }), `Synced ${prepared.length} transactions`);
-    return ok(prepared.length);
+    return ok({ added: prepared.length, skipped });
   },
 
   /** Notes that a bank wants you to sign in again. */
