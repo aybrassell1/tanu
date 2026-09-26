@@ -153,7 +153,7 @@ export default function SettingsScreen() {
         </Card>
       </Section>
 
-      <Section title="Backup & export" subtitle="Your data is never locked in. Backups are plain JSON.">
+      <Section title="Backup & export">
         <ListCard>
           <ListRow title="Export full backup" subtitle="Everything, restorable on any device" icon="download" chevron onPress={exportBackup} />
           <ListRow title="Export transactions as CSV" subtitle="Open in Excel, Numbers or Google Sheets" icon="file-text" chevron onPress={exportCsv} />

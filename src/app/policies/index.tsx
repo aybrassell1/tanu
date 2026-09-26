@@ -110,7 +110,7 @@ export default function PoliciesScreen() {
       )}
 
       {summary.expired.length > 0 && (
-        <Section title="Expired" subtitle="Kept for your records">
+        <Section title="Expired">
           <ListCard>
             {summary.expired.map((p) => (
               <PolicyRow key={p.id} policy={p} today={today} onPress={() => open(p)} />
@@ -126,7 +126,7 @@ export default function PoliciesScreen() {
 
 function Suggestions({ suggestions, onAdd }: { suggestions: ReturnType<typeof suggestedPolicies>; onAdd: (kind: string) => void }) {
   return (
-    <Section title="Not recorded yet" subtitle="Based on what is already in your ledger">
+    <Section title="Not recorded yet">
       <ListCard>
         {suggestions.map((s) => (
           <ListRow

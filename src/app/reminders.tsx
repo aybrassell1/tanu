@@ -99,7 +99,7 @@ export default function RemindersScreen() {
 
   return (
     <Screen header={<NavHeader title="Reminders & lock" />}>
-      <Section title="Reminders" subtitle="Nudges for bills, paydays and a low balance.">
+      <Section title="Reminders">
         <Banner
           tone="positive"
           icon="shield"

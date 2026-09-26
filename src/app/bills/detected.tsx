@@ -106,7 +106,7 @@ export default function DetectedScreen() {
           {active.length > 0 && <Section title="Still arriving">{active.map(card)}</Section>}
 
           {lapsed.length > 0 && (
-            <Section title="Looks like it stopped" subtitle="Cancelled, or a payment that never came">
+            <Section title="Looks like it stopped">
               {lapsed.map(card)}
             </Section>
           )}

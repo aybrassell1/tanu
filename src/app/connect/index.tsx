@@ -310,7 +310,7 @@ export default function ConnectScreen() {
           </Section>
 
           {checks.length > 0 && (
-            <Section title="What your bank says" subtitle="Balances here are added up from transactions; this is the second opinion">
+            <Section title="What your bank says">
               <Card style={{ gap: spacing.sm }}>
                 {checks.map((check) => (
                   <View key={`${check.connectionId}:${check.externalId}`} style={{ gap: 4 }}>

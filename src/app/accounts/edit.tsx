@@ -175,7 +175,7 @@ export default function AccountFormScreen() {
       )}
 
       {info.fields.payment && (
-        <Section title="Payments" subtitle="Due dates put payments on your calendar and in cash-flow forecasts.">
+        <Section title="Payments">
           <Stack gap={spacing.lg}>
             <View style={styles.row}>
               <View style={{ flex: 1 }}>

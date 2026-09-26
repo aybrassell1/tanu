@@ -65,7 +65,7 @@ export default function PlaceEditScreen() {
         </Stack>
       </Section>
 
-      <Section title="Every month, on top of rent" subtitle="Name each one, so a number still means something next week">
+      <Section title="Every month, on top of rent">
         <FeeEditor when="monthly" fees={draft.fees} onChange={setFees} emptyHint="Tap a fee to add it, or add your own. Utilities count toward the 30% rule; the rest are just costs." />
       </Section>
 

@@ -112,7 +112,7 @@ export default function PlaceScreen() {
       </Section>
 
       {scored.basis === 'full' && (
-      <Section title="Against your money" subtitle="Same rules as the rent calculator">
+      <Section title="Against your money">
         <Card style={{ gap: spacing.sm }}>
           {scored.result.checks.map((c) => (
             <Row key={c.key}>
@@ -144,7 +144,7 @@ export default function PlaceScreen() {
       </Section>
       )}
 
-      <Section title="How it felt" subtitle="Rate it while you remember">
+      <Section title="How it felt">
         <Card style={{ gap: spacing.sm }}>
           {RATINGS.map((r) => (
             <RatingRow key={r.id} label={r.label} score={place.ratings.find((x) => x.id === r.id)?.score ?? 0} onChange={(score) => ledger.ratePlace(place.id, r.id, score)} />

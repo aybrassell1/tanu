@@ -161,7 +161,7 @@ export default function IouDetailScreen() {
         )}
       </Section>
 
-      <Section title="Money that actually moved" subtitle="Transactions recorded from this IOU">
+      <Section title="Money that actually moved">
         {linked.length === 0 ? (
           <Banner
             tone="muted"

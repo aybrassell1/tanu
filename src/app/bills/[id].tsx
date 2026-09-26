@@ -169,7 +169,7 @@ export default function BillDetailScreen() {
       </Section>
 
       {item.kind === 'subscription' && (
-        <Section title="Usage" subtitle="Helps spot subscriptions that might not be worth it">
+        <Section title="Usage">
           <Card style={{ gap: spacing.md }}>
             <ChipSelect options={USAGE_OPTIONS} value={item.usage} onChange={(usage) => save({ usage })} />
             <Row>

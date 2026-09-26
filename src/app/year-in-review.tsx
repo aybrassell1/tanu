@@ -173,7 +173,7 @@ export default function YearInReviewScreen() {
         </Section>
       )}
 
-      <Section title="Fun but true" subtitle="All computed from what you recorded">
+      <Section title="Fun but true">
         {review.facts.length > 0 ? (
           <FactsCard facts={review.facts} />
         ) : (

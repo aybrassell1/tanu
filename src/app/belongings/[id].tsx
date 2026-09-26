@@ -235,7 +235,7 @@ export default function AssetDetailScreen() {
         </Card>
       </Section>
 
-      <Section title="Value history" subtitle="Newest first">
+      <Section title="Value history">
         {valuations.length === 0 && (
           <EmptyState compact icon="clock" title="No values recorded" message="Record what it's worth so it counts toward net worth." actionLabel="Update value" onAction={() => setUpdating(true)} />
         )}
@@ -293,7 +293,7 @@ export default function AssetDetailScreen() {
 
       <OwnershipCard asset={asset} />
 
-      <Section title="Is it covered?" subtitle="Insurance and warranties on this item">
+      <Section title="Is it covered?">
         {cover.length === 0 ? (
           <EmptyState compact icon="shield" title="No cover recorded" message="Record the policy or warranty that covers this, so you know when it runs out." actionLabel="Add cover" onAction={addCover} />
         ) : (

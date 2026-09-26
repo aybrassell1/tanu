@@ -186,7 +186,7 @@ export default function SyncScreen() {
           </Section>
 
           {plan.counts.duplicate > 0 && (
-            <Section title="Already in your ledger" subtitle="Recognised, so nothing is counted twice">
+            <Section title="Already in your ledger">
               {plan.rows
                 .filter((r) => r.kind === 'duplicate')
                 .slice(0, 20)

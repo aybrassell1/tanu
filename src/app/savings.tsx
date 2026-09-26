@@ -182,7 +182,7 @@ export default function SavingsScreen() {
         )}
       </Section>
 
-      <Section title="Reserved for irregular costs" subtitle="Sinking funds for costs that don't arrive monthly" action={m.reserves.funds > 0 ? 'All funds' : undefined} onAction={() => router.push('/sinking')}>
+      <Section title="Reserved for irregular costs" action={m.reserves.funds > 0 ? 'All funds' : undefined} onAction={() => router.push('/sinking')}>
         {m.reserves.funds === 0 ? (
           <EmptyState
             compact
