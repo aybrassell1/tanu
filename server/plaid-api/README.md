@@ -43,6 +43,16 @@ access token and your transactions live on your phone, not here.
 Switch `PLAID_SECRET` to your Production secret and `PLAID_ENV` to `production`,
 redeploy, and reconnect your banks. Sandbox items don't carry over.
 
+## Checking it is alive
+
+A plain GET says how it is configured, without a key and without calling Plaid:
+
+
+
+It answers with the environment it would use and whether each variable is set —
+names and yes/no, never a value. An env of production and three trues means the
+server is ready.
+
 ## What it will and won't do
 
 - Six Plaid calls, each with a fixed list of fields. Anything else in a request
