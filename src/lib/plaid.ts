@@ -47,7 +47,8 @@ async function call<T>(api: BankApi, action: Action, body: Record<string, unknow
     if (response.status === 401) throw new PlaidError('That key was refused. Check the key matches APP_KEY on the server.', 'unauthorized', 401);
     if (response.status === 403) throw new PlaidError('This app is not in the server\'s allowed origins.', 'origin_not_allowed', 403);
     const code = typeof json?.error_code === 'string' ? json.error_code : typeof json?.error === 'string' ? json.error : undefined;
-    const detail = typeof json?.error_message === 'string' ? json.error_message : undefined;
+    // Plaid says error_message; our own pass-through says detail.
+    const detail = typeof json?.error_message === 'string' ? json.error_message : typeof json?.detail === 'string' ? json.detail : undefined;
     throw new PlaidError(detail ?? `The server said no (${response.status}).`, code, response.status);
   }
   return (json ?? {}) as T;

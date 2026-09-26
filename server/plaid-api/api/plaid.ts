@@ -71,7 +71,11 @@ export default async function handler(req: Req, res: Res) {
   const payload: Json = { client_id: env.PLAID_CLIENT_ID, secret: env.PLAID_SECRET };
   for (const field of action.fields) if (body[field] !== undefined) payload[field] = body[field];
 
-  const host = PLAID_HOSTS[env.PLAID_ENV ?? 'sandbox'] ?? PLAID_HOSTS.sandbox;
+  // A stray space or a typo in PLAID_ENV would otherwise send production
+  // traffic to the sandbox and look like a key problem.
+  const wanted = (env.PLAID_ENV ?? 'sandbox').trim().toLowerCase();
+  const host = PLAID_HOSTS[wanted];
+  if (!host) return res.status(500).json({ error: 'bad_environment', detail: `PLAID_ENV is "${wanted}"; it has to be sandbox or production.` });
   try {
     const response = await fetch(`${host}${action.path}`, {
       method: 'POST',
@@ -83,8 +87,9 @@ export default async function handler(req: Req, res: Res) {
     res.status(response.status);
     res.setHeader('content-type', 'application/json');
     return res.json((safeParse(text) ?? { error: 'bad_upstream_response' }) as Json);
-  } catch {
-    return res.status(502).json({ error: 'plaid_unreachable' });
+  } catch (e) {
+    // Say what actually went wrong; a bare 502 tells nobody anything.
+    return res.status(502).json({ error: 'plaid_unreachable', detail: e instanceof Error ? e.message : String(e) });
   }
 }
 
