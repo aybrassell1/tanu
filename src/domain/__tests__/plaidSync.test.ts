@@ -164,6 +164,6 @@ describe('what a bank sync would do', () => {
   it('does nothing for a connection that is not there', () => {
     const result = planSync(ledger(), 'missing', payload([plaid({ amount: 10 })]));
     expect(result.rows).toEqual([]);
-    expect(result.counts).toEqual({ new: 0, transfer: 0, duplicate: 0, unmapped: 0, pending: 0 });
+    expect(result.counts).toEqual({ new: 0, transfer: 0, duplicate: 0, unmapped: 0, pending: 0, needs_pair: 0, ignored: 0 });
   });
 });

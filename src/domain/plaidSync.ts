@@ -45,7 +45,16 @@ export interface SyncPayload {
 }
 
 /** Why a row is here, and what it would do to your ledger. */
-export type RowKind = 'new' | 'transfer' | 'duplicate' | 'unmapped' | 'pending';
+export type RowKind =
+  | 'new'
+  | 'transfer'
+  | 'duplicate'
+  | 'unmapped'
+  | 'pending'
+  /** Money arriving on a card from an account that isn't connected. */
+  | 'needs_pair'
+  /** Nothing to record: a zero-amount line, which some banks send. */
+  | 'ignored';
 
 export interface SyncRow {
   /** The bank's id; also what lands on the transaction. */
@@ -57,6 +66,8 @@ export interface SyncRow {
   replaces?: ID;
   /** The other half of a paired transfer, so neither is offered twice. */
   pairedWith?: string;
+  /** Reads as paying a card off rather than being paid back. */
+  paymentLike?: boolean;
   /** Shown in the review list. */
   label: string;
   amount: Cents;
@@ -68,7 +79,7 @@ export interface SyncResult {
   rows: SyncRow[];
   /** Ids the bank says it removed, that exist here. */
   removed: ID[];
-  counts: { new: number; transfer: number; duplicate: number; unmapped: number; pending: number };
+  counts: { new: number; transfer: number; duplicate: number; unmapped: number; pending: number; needs_pair: number; ignored: number };
 }
 
 /**
@@ -89,7 +100,7 @@ export const toCents = (amount: number): Cents => Math.round(amount * 100);
  */
 export function planSync(data: LedgerData, connectionId: ID, payload: SyncPayload, options: { includePending?: boolean } = {}): SyncResult {
   const connection = data.connections.find((c) => c.id === connectionId);
-  if (!connection) return { rows: [], removed: [], counts: { new: 0, transfer: 0, duplicate: 0, unmapped: 0, pending: 0 } };
+  if (!connection) return { rows: [], removed: [], counts: emptyCounts() };
 
   const accountFor = new Map(connection.accounts.filter((a) => a.accountId).map((a) => [a.externalId, a.accountId as ID]));
   const nameFor = new Map(connection.accounts.map((a) => [a.externalId, a.name]));
@@ -104,6 +115,7 @@ export function planSync(data: LedgerData, connectionId: ID, payload: SyncPayloa
     const label = (tx.merchant_name || tx.name || '').trim();
     const date = (tx.authorized_date || tx.date) as ISODate;
     const base = { externalId: tx.transaction_id, label, amount, date, accountName };
+    const paymentLike = tx.amount < 0 && looksLikePayment(tx);
 
     // A pending charge changes its amount and its date before it settles, and
     // arrives again with a new id when it does. Waiting is simpler than mending.
@@ -115,6 +127,12 @@ export function planSync(data: LedgerData, connectionId: ID, payload: SyncPayloa
       rows.push({ ...base, kind: 'unmapped' });
       continue;
     }
+    if (amount === 0) {
+      rows.push({ ...base, kind: 'ignored' });
+      continue;
+    }
+
+
 
     const existing = seen.get(tx.transaction_id);
     const type: TransactionType = spendingDirection(data, accountId, tx.amount);
@@ -122,7 +140,7 @@ export function planSync(data: LedgerData, connectionId: ID, payload: SyncPayloa
       type,
       amount,
       date,
-      description: label || tx.name,
+      description: label || tx.name || 'Unnamed transaction',
       payee: label || undefined,
       accountId,
       externalId: tx.transaction_id,
@@ -138,18 +156,27 @@ export function planSync(data: LedgerData, connectionId: ID, payload: SyncPayloa
       // their own descriptions for weeks afterwards, and re-offering a row
       // because a name got shorter would make every sync look like work.
       const changed = existing.amount !== amount || existing.date !== date;
-      rows.push({ ...base, kind: changed ? 'new' : 'duplicate', draft: changed ? draft : undefined, replaces: changed ? existing.id : undefined });
+      rows.push({ ...base, paymentLike, kind: changed ? 'new' : 'duplicate', draft: changed ? draft : undefined, replaces: changed ? existing.id : undefined });
       continue;
     }
     // The same charge recorded by hand before the sync caught up.
     const byHand = alreadyRecorded(data, draft);
-    rows.push({ ...base, kind: byHand ? 'duplicate' : 'new', draft: byHand ? undefined : draft });
+    rows.push({ ...base, paymentLike, kind: byHand ? 'duplicate' : 'new', draft: byHand ? undefined : draft });
   }
 
   pairTransfers(rows);
 
+  // Anything still unpaired that reads as a card payment has no source account
+  // to have come from. Inventing one would be worse than waiting.
+  for (const row of rows) {
+    if (row.kind === 'new' && row.paymentLike) {
+      row.kind = 'needs_pair';
+      row.draft = undefined;
+    }
+  }
+
   const removed = payload.removed.map((r) => seen.get(r.transaction_id)?.id).filter((id): id is ID => !!id);
-  const counts = { new: 0, transfer: 0, duplicate: 0, unmapped: 0, pending: 0 };
+  const counts = emptyCounts();
   for (const row of rows) counts[row.kind] += 1;
   return { rows, removed, counts };
 }
@@ -160,12 +187,26 @@ export function planSync(data: LedgerData, connectionId: ID, payload: SyncPayloa
  * halves are on the table.
  */
 function spendingDirection(data: LedgerData, accountId: ID, amount: number): TransactionType {
-  const account = data.accounts.find((a) => a.id === accountId);
-  const liability = account ? accountNature(account.type) === 'liability' : false;
-  // On a card, Plaid reports a purchase as positive and a payment as negative.
   if (amount > 0) return 'expense';
-  return liability ? 'debt_payment' : 'income';
+  // Money arriving on a card that is not a payment is a refund, which offsets
+  // what you spent rather than counting as income. A payment never reaches
+  // here: it has no source account, so it is held back instead.
+  return isLiability(data, accountId) ? 'refund' : 'income';
 }
+
+const isLiability = (data: LedgerData, accountId: ID): boolean => {
+  const account = data.accounts.find((a) => a.id === accountId);
+  return account ? accountNature(account.type) === 'liability' : false;
+};
+
+/** The words banks use when you pay a card off, rather than when a shop pays you back. */
+const PAYMENT_WORDS = /\b(payment|thank you|autopay|e-?pay|bill pay|pmt)\b/i;
+
+const looksLikePayment = (tx: PlaidTransaction): boolean =>
+  PAYMENT_WORDS.test(`${tx.merchant_name ?? ''} ${tx.name ?? ''}`) ||
+  (tx.personal_finance_category?.primary ?? '') === 'TRANSFER_IN';
+
+const emptyCounts = (): SyncResult['counts'] => ({ new: 0, transfer: 0, duplicate: 0, unmapped: 0, pending: 0, needs_pair: 0, ignored: 0 });
 
 /**
  * Two halves of one move: the same amount leaving one of your accounts and
@@ -174,7 +215,7 @@ function spendingDirection(data: LedgerData, accountId: ID, amount: number): Tra
  */
 function pairTransfers(rows: SyncRow[]) {
   const out = rows.filter((r) => r.kind === 'new' && r.draft && r.draft.type === 'expense');
-  const inn = rows.filter((r) => r.kind === 'new' && r.draft && (r.draft.type === 'income' || r.draft.type === 'debt_payment'));
+  const inn = rows.filter((r) => r.kind === 'new' && r.draft && ['income', 'debt_payment', 'refund'].includes(r.draft.type));
   const used = new Set<string>();
 
   for (const leaving of out) {
@@ -194,7 +235,8 @@ function pairTransfers(rows: SyncRow[]) {
     leaving.pairedWith = match.externalId;
     leaving.draft = {
       ...leaving.draft!,
-      type: match.draft!.type === 'debt_payment' ? 'debt_payment' : 'transfer',
+      // Money that landed on a card is a debt payment; anywhere else it is a transfer.
+      type: match.paymentLike || match.draft!.type === 'debt_payment' ? 'debt_payment' : 'transfer',
       toAccountId: match.draft!.accountId,
       categoryId: undefined,
     };

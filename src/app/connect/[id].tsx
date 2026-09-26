@@ -150,6 +150,14 @@ export default function SyncScreen() {
               message="Point those accounts at yours on the previous screen, then sync again."
             />
           )}
+          {plan.counts.needs_pair > 0 && (
+            <Banner
+              tone="warning"
+              icon="git-merge"
+              title={`${plan.counts.needs_pair} card ${plan.counts.needs_pair === 1 ? 'payment has' : 'payments have'} nowhere to come from`}
+              message="These arrived on a card, but the account they were paid from isn't connected. Connect it and they pair into one payment instead of being counted twice."
+            />
+          )}
           {plan.counts.pending > 0 && (
             <Banner tone="muted" icon="clock" title={`${plan.counts.pending} still pending`} message="Pending charges change before they settle, so they arrive on a later sync." />
           )}
