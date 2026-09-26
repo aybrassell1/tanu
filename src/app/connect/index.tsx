@@ -3,11 +3,12 @@ import { useMemo, useState } from 'react';
 import { View } from 'react-native';
 
 import { accountOptions } from '@/components/finance/Pickers';
-import { Banner, Button, Card, Disclosure, EmptyState, ListRow, NavHeader, Pill, Row, Screen, Section, SelectField, Text, TextField, useOverlay } from '@/components/ui';
+import { Banner, Button, Card, Disclosure, EmptyState, ListRow, NavHeader, Pill, Row, Screen, Section, SelectField, SwitchRow, Text, TextField, useOverlay } from '@/components/ui';
 import { relativePhrase } from '@/domain/dates';
 import { isSandbox } from '@/domain/plaidSync';
 import type { BankConnection } from '@/domain/types';
-import { accounts as fetchAccounts, exchange, institutionName, linkSupported, linkToken, openLink, PlaidError, type BankApi } from '@/lib/plaid';
+import { accounts as fetchAccounts, exchange, institutionName, linkToken, PlaidError, type BankApi } from '@/lib/plaid';
+import { linkSupported, openLink } from '@/lib/plaidLink';
 import { useData, useSettings, useToday } from '@/store/hooks';
 import { ledger } from '@/store/ledger';
 import { colors, spacing } from '@/theme/tokens';
@@ -209,6 +210,28 @@ export default function ConnectScreen() {
               <Button label={busy === 'connect' ? 'Opening…' : 'Connect another bank'} icon="plus" variant="secondary" fullWidth onPress={connect} />
             )}
           </Section>
+
+          {data.connections.length > 0 && (
+            <Section title="How much it does on its own">
+              <Card style={{ gap: spacing.sm }}>
+                <SwitchRow
+                  label="Catch up when I open the app"
+                  description="There is no background sync on a phone, so this is the moment it can look."
+                  value={settings.autoSync?.onOpen ?? true}
+                  onChange={(v) => ledger.updateSettings({ autoSync: { onOpen: v, autoAdd: settings.autoSync?.autoAdd ?? true } })}
+                />
+                <SwitchRow
+                  label="Add what it finds"
+                  description="Off, and new transactions wait on the sync screen for you to approve."
+                  value={settings.autoSync?.autoAdd ?? true}
+                  onChange={(v) => ledger.updateSettings({ autoSync: { onOpen: settings.autoSync?.onOpen ?? true, autoAdd: v } })}
+                />
+                <Text variant="caption" color={colors.textTertiary}>
+                  Either way a sync is a single undo, and everything it adds shows up in Activity like anything else.
+                </Text>
+              </Card>
+            </Section>
+          )}
 
           <Section title="The server">
             <Card style={{ gap: spacing.sm }}>

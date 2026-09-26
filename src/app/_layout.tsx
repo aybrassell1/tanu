@@ -8,7 +8,8 @@ import { OverlayProvider, useOverlay } from '@/components/ui';
 import { Splash } from '@/components/ui/Splash';
 import { LockGate } from '@/lib/lock';
 import { useReminderSync } from '@/lib/notifications';
-import { hydrateLedger, useLedgerStore } from '@/store/ledger';
+import { summarize, useAutoSync } from '@/lib/autoSync';
+import { hydrateLedger, ledger, useLedgerStore } from '@/store/ledger';
 import { applyTheme, revealApp } from '@/theme/applyTheme';
 import { LIGHT } from '@/theme/palette';
 import { motion } from '@/theme/motion';
@@ -58,6 +59,7 @@ export default function RootLayout() {
       <StatusBar style="dark" />
       <SaveErrorWatcher />
       <ReminderSync />
+      <BankSync />
       {/* Nothing but the opening screen until fonts and the ledger are in: the
           lock and the router both want data that isn't there yet. */}
       {!ready ? (
@@ -91,6 +93,16 @@ export default function RootLayout() {
 /** Keeps the device's scheduled reminders in step with the ledger. */
 function ReminderSync() {
   useReminderSync();
+  return null;
+}
+
+/** Catches up with connected banks when the app opens, and says what arrived. */
+function BankSync() {
+  const { toast } = useOverlay();
+  useAutoSync((outcomes) => {
+    const message = summarize(outcomes);
+    if (message) toast({ message, actionLabel: 'Undo', onAction: ledger.undo });
+  });
   return null;
 }
 

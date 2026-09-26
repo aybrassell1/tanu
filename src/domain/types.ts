@@ -683,6 +683,11 @@ export interface Settings {
   ignoredRecurring?: string[];
   /** Your own Plaid pass-through: where it is deployed, and the key for it. */
   bankApi?: { url: string; key: string };
+  /**
+   * How much a connected bank does on its own. Both default to on: there is no
+   * server to poll for you, so opening the app is the only chance to catch up.
+   */
+  autoSync?: { onOpen: boolean; autoAdd: boolean };
 }
 
 export interface LedgerMeta {
