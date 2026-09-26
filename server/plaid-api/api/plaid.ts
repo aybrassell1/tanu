@@ -15,6 +15,7 @@ type Json = Record<string, unknown>;
 
 interface Req {
   method?: string;
+  url?: string;
   headers: Record<string, string | string[] | undefined>;
   body: unknown;
 }
@@ -63,6 +64,23 @@ export default async function handler(req: Req, res: Res) {
   // talk to. Names and yes/no only — no value here is a secret, and it saves
   // guessing from the other side of a 502.
   if (req.method === 'GET') {
+    // ?selftest=1 makes one harmless call — a list of institutions, nothing
+    // about anyone's money — so a failure can be read from outside.
+    if (new URL(req.url ?? '/', 'https://x').searchParams.get('selftest')) {
+      const where = PLAID_HOSTS[(env.PLAID_ENV ?? 'sandbox').trim().toLowerCase()] ?? PLAID_HOSTS.sandbox;
+      try {
+        const probe = await fetch(`${where}/institutions/get`, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ client_id: env.PLAID_CLIENT_ID, secret: env.PLAID_SECRET, count: 1, offset: 0, country_codes: ['US'] }),
+        });
+        const body = await probe.text();
+        return res.status(200).json({ reached: where, status: probe.status, body: body.slice(0, 400) });
+      } catch (e) {
+        const cause = e instanceof Error && e.cause ? (e.cause as Error) : undefined;
+        return res.status(200).json({ reached: where, threw: e instanceof Error ? `${e.name}: ${e.message}` : String(e), cause: cause ? `${cause.name}: ${cause.message}` : undefined });
+      }
+    }
     return res.status(200).json({
       ok: secretsPresent(env),
       env: (env.PLAID_ENV ?? '(unset)').trim().toLowerCase(),
