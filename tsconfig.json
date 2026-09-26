@@ -11,5 +11,9 @@
   "include": [
     "**/*.ts",
     "**/*.tsx"
+  ],
+  // The Plaid pass-through is a separate deployment with its own tsconfig.
+  "exclude": [
+    "server"
   ]
 }

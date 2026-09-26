@@ -11,7 +11,7 @@ Commands: `npm run typecheck`, `npm test` (vitest, domain logic), `npm run web`.
 ## Architecture
 
 - `src/domain/` — pure, framework-free financial logic. **All money is integer cents; all dates are `YYYY-MM-DD` strings.** Never do money math in screens that the domain already provides.
-  - `types.ts` data model · `catalog.ts` enum metadata (labels/icons) · `ledger.ts` postings, balances, classification · `schedule.ts` scheduled events (bills, paychecks, debt due dates) · `position.ts` net worth + available-to-spend · `reports.ts` period stats & monthly review · `budgets.ts` · `goals.ts` · `debt.ts` (summary + payoff simulation) · `forecast.ts` · `scenarios.ts` · `alerts.ts` · `search.ts` · `validation.ts` · `backup.ts` · `sample.ts` · `merchantText.ts` (statement text → merchant fingerprint) · `merchants.ts` (what you usually do with a merchant) · `recurringDetect.ts` (bills found in real spending) · `places.ts` (apartment tours: questions, true cost, grade).
+  - `types.ts` data model · `catalog.ts` enum metadata (labels/icons) · `ledger.ts` postings, balances, classification · `schedule.ts` scheduled events (bills, paychecks, debt due dates) · `position.ts` net worth + available-to-spend · `reports.ts` period stats & monthly review · `budgets.ts` · `goals.ts` · `debt.ts` (summary + payoff simulation) · `forecast.ts` · `scenarios.ts` · `alerts.ts` · `search.ts` · `validation.ts` · `backup.ts` · `sample.ts` · `merchantText.ts` (statement text → merchant fingerprint) · `merchants.ts` (what you usually do with a merchant) · `recurringDetect.ts` (bills found in real spending) · `places.ts` (apartment tours: questions, true cost, grade) · `plaidSync.ts` (a bank's transactions → drafts you approve).
 - `src/store/ledger.ts` — the single zustand store. Mutate **only** through `ledger.*` actions; they validate and return `Result` (`{ ok: true, id } | { ok: false, errors }`). Destructive actions are undoable via `ledger.undo()`.
 - `src/store/hooks.ts` — `useData()`, `useToday()`, `useSettings()`, `useMoney()` (formatter honoring currency + privacy mode), `useDerived(fn)`.
 - `src/components/ui/` — design system (import from `@/components/ui`). `src/components/finance/` — shared finance rows (`TransactionRow`, `EventRow`, `AccountRow`, `DateBadge`) and pickers (`AccountSelect`, `CategorySelect`, `FrequencySelect`, `MonthSwitcher`, `accountOptions`, `categoryOptions`).
@@ -62,6 +62,16 @@ Commands: `npm run typecheck`, `npm test` (vitest, domain logic), `npm run web`.
 - With no income recorded `scorePlace` returns `grade: null` and `basis: 'no_income'`: a letter there would be a guess dressed up as a judgement.
 - `data.places` are notes, not money. They never post to balances, never appear in the forecast, and only moving in and recording the rent changes anything.
 - Answers, ratings and notes save as you tap or type (debounced), so `savePlace` deliberately keeps the existing `answers`/`ratings`/`photos`/`notes` instead of overwriting them from the costs form.
+
+## Connected banks
+
+- Optional, and off unless the user sets it up. `server/plaid-api` is a separate Vercel deployment that holds the Plaid secret and forwards six fixed calls; the app has no Plaid credentials and cannot reach Plaid directly. Its address and key live in `settings.bankApi`.
+- `domain/plaidSync.ts` is pure: `planSync` turns a Plaid payload into `SyncRow`s and decides nothing. The screens show the plan and **the user approves it** — a sync never writes on its own. `ledger.applySync` commits the lot in one go, so a whole sync is a single undo.
+- A synced transaction carries `externalId` (the bank's id) and `connectionId`. That is how a later sync recognises it; never match on description alone.
+- Plaid signs amounts the other way round: **positive is money leaving**. Amounts are floats in dollars, so convert with `toCents`, never by hand.
+- Both halves of a transfer arrive, once per account. `pairTransfers` folds them into a single transfer or debt payment; counting both would invent spending and income that never happened.
+- Pending charges are held back until they settle, and an account the user hasn't mapped is ignored entirely.
+- Any copy about privacy has to stay true: the app still never asks for a bank password, but with a bank connected the data does pass through the user's own deployment.
 
 ## Splits & side ledgers
 

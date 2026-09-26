@@ -8,7 +8,7 @@ import { ledger } from '@/store/ledger';
 import { colors, spacing } from '@/theme/tokens';
 
 const POINTS: { icon: IconName; title: string; body: string }[] = [
-  { icon: 'lock', title: 'Private by design', body: 'Everything stays on this device. No bank logins, no servers, no tracking.' },
+  { icon: 'lock', title: 'Private by design', body: 'Everything stays on this device. No tracking, and no bank password ever — connecting one is optional and read-only.' },
   { icon: 'edit-3', title: 'Manual first', body: 'Add accounts and transactions yourself in seconds. Nothing is required to be linked.' },
   { icon: 'download', title: 'Your data, portable', body: 'Export a full backup or a CSV of transactions whenever you like.' },
 ];

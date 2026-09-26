@@ -140,7 +140,14 @@ export default function SettingsScreen() {
   return (
     <Screen header={<NavHeader title="Settings & data" />}>
       <Section title="Privacy">
-        <Banner tone="positive" icon="lock" title="Your data stays on this device" message={`${storageDescription} Tanu never asks for bank credentials and doesn't send your financial information anywhere.`} />
+        <Banner
+          tone="positive"
+          icon="lock"
+          title="Your data stays on this device"
+          message={`${storageDescription} Tanu never asks for a bank password.${
+            settings.bankApi ? ' A bank is connected, so transactions come through the server you deployed — read-only, and nothing is stored there.' : " Nothing leaves this device unless you connect a bank yourself."
+          }`}
+        />
         <Card>
           <SwitchRow label="Hide amounts" description="Mask balances and totals, e.g. when others can see your screen." icon="eye-off" value={settings.hideAmounts} onChange={(v) => ledger.updateSettings({ hideAmounts: v })} />
         </Card>

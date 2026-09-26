@@ -81,7 +81,13 @@ export function migrate(data: LedgerData): LedgerData {
   if (version < 3) out = migrateToV3(out);
   if (version < 4) out = migrateToV4(out);
   if (version < 5) out = migrateToV5(out);
+  if (version < 6) out = migrateToV6(out);
   return { ...out, meta: { ...out.meta, schemaVersion: SCHEMA_VERSION } };
+}
+
+/** v6: banks you can connect, so transactions arrive on their own. */
+function migrateToV6(data: LedgerData): LedgerData {
+  return { ...data, connections: Array.isArray(data.connections) ? data.connections : [] };
 }
 
 type LegacyPlace = {

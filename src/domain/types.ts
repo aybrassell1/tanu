@@ -223,6 +223,10 @@ export interface Transaction {
   reimbursableFrom?: 'hsa' | 'fsa';
   reimbursedOn?: ISODate;
   adjustmentKind?: AdjustmentKind;
+  /** The bank's own id, when this came from a connected account. */
+  externalId?: string;
+  /** The connection it arrived through. */
+  connectionId?: ID;
   /** Link to the recurring item and the specific occurrence it settles. */
   recurringId?: ID;
   occurrenceDate?: ISODate;
@@ -677,12 +681,50 @@ export interface Settings {
   dashboard: { order: DashboardWidgetId[]; hidden: DashboardWidgetId[] };
   /** Merchant fingerprints you have said are not a recurring bill. */
   ignoredRecurring?: string[];
+  /** Your own Plaid pass-through: where it is deployed, and the key for it. */
+  bankApi?: { url: string; key: string };
 }
 
 export interface LedgerMeta {
   schemaVersion: number;
   isSample: boolean;
   onboarded: boolean;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+// ─── Connected banks ─────────────────────────────────────────────────────────
+
+/** One account at a connected bank, and the account it feeds in your ledger. */
+export interface ConnectedAccount {
+  /** Plaid's id for the account. */
+  externalId: string;
+  name: string;
+  /** Last four digits, when the bank gives them. */
+  mask?: string;
+  /** Plaid's type and subtype, e.g. depository / checking. */
+  type: string;
+  subtype?: string;
+  /** The account here that it maps to. Unmapped accounts are not synced. */
+  accountId?: ID;
+}
+
+/**
+ * A bank you connected. The access token is Plaid's and is useless without the
+ * server's secret, which lives in the deployment and never on this device.
+ */
+export interface BankConnection {
+  id: ID;
+  /** Plaid's item id, so reconnecting the same bank is recognised. */
+  itemId: string;
+  institutionName: string;
+  accessToken: string;
+  /** Where the last sync left off. */
+  cursor?: string;
+  accounts: ConnectedAccount[];
+  lastSyncedAt?: Timestamp;
+  /** Set when the bank needs you to sign in again. */
+  needsAttention?: string;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
@@ -796,4 +838,6 @@ export interface LedgerData {
   places: Place[];
   /** Questions you added to the tour checklist yourself. */
   tourQuestions: CustomTourQuestion[];
+  /** Banks you have connected, if you connected any. */
+  connections: BankConnection[];
 }

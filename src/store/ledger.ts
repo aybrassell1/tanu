@@ -31,6 +31,8 @@ import type {
   Scenario,
   Iou,
   IouEntry,
+  BankConnection,
+  ConnectedAccount,
   CustomTourQuestion,
   Place,
   PlaceStatus,
@@ -771,6 +773,86 @@ export const ledger = {
   },
 
   // Settings & data ───────────────────────────────────────────────────────────
+  // Connected banks ───────────────────────────────────────────────────────────
+  /** Adds a bank, or refreshes the one already linked to the same Plaid item. */
+  saveConnection(input: Omit<BankConnection, 'createdAt' | 'updatedAt' | 'id'> & { id?: ID }): Result {
+    const existing = input.id
+      ? get().connections.find((c) => c.id === input.id)
+      : get().connections.find((c) => c.itemId === input.itemId);
+    const connection: BankConnection = {
+      ...input,
+      id: existing?.id ?? createId('conn'),
+      // Reconnecting keeps where the last sync got to, so it doesn't start again.
+      cursor: input.cursor ?? existing?.cursor,
+      accounts: input.accounts.map((a) => ({ ...a, accountId: a.accountId ?? existing?.accounts.find((old) => old.externalId === a.externalId)?.accountId })),
+      createdAt: existing?.createdAt ?? nowStamp(),
+      updatedAt: nowStamp(),
+    };
+    commit((d) => ({ ...d, connections: upsert(d.connections, connection) }), 'Bank connected');
+    return ok(connection.id);
+  },
+
+  /** Points one of the bank's accounts at an account in your ledger. */
+  mapConnectionAccount(id: ID, externalId: string, accountId: ID | undefined) {
+    commit((d) => ({
+      ...d,
+      connections: d.connections.map((c) =>
+        c.id === id ? { ...c, accounts: c.accounts.map((a) => (a.externalId === externalId ? { ...a, accountId } : a)), updatedAt: nowStamp() } : c,
+      ),
+    }), 'Account linked');
+  },
+
+  /**
+   * Records what a sync decided: the rows you accepted, the corrections, the
+   * removals and where to pick up next time — all in one commit, so a whole
+   * sync is a single undo.
+   */
+  applySync(
+    id: ID,
+    input: {
+      add: (Omit<Transaction, 'id' | 'createdAt' | 'updatedAt'> & { id?: ID })[];
+      replace?: { id: ID; with: Omit<Transaction, 'id' | 'createdAt' | 'updatedAt'> }[];
+      removeIds?: ID[];
+      cursor?: string;
+    },
+  ): Result<number> {
+    const data = get();
+    const stamp = nowStamp();
+    const prepared: Transaction[] = [];
+    for (const row of input.add) {
+      const tx: Transaction = { ...row, id: row.id ?? createId('tx'), createdAt: stamp, updatedAt: stamp };
+      // A row that fails validation is skipped rather than breaking the sync.
+      if (!hasErrors(validateTransaction({ ...data, transactions: [...data.transactions, ...prepared] }, tx))) prepared.push(tx);
+    }
+    const replacements = new Map((input.replace ?? []).map((r) => [r.id, r.with]));
+    const gone = new Set(input.removeIds ?? []);
+
+    commit((d) => ({
+      ...d,
+      transactions: [
+        ...d.transactions
+          .filter((t) => !gone.has(t.id))
+          .map((t) => {
+            const next = replacements.get(t.id);
+            return next ? { ...t, ...next, id: t.id, createdAt: t.createdAt, updatedAt: stamp } : t;
+          }),
+        ...prepared,
+      ],
+      connections: d.connections.map((c) => (c.id === id ? { ...c, cursor: input.cursor ?? c.cursor, lastSyncedAt: stamp, needsAttention: undefined, updatedAt: stamp } : c)),
+    }), `Synced ${prepared.length} transactions`);
+    return ok(prepared.length);
+  },
+
+  /** Notes that a bank wants you to sign in again. */
+  flagConnection(id: ID, reason: string | undefined) {
+    commit((d) => ({ ...d, connections: d.connections.map((c) => (c.id === id ? { ...c, needsAttention: reason, updatedAt: nowStamp() } : c)) }), 'Connection updated');
+  },
+
+  /** Forgets the bank here. Removing it at Plaid is a separate call. */
+  deleteConnection(id: ID) {
+    commit((d) => ({ ...d, connections: d.connections.filter((c) => c.id !== id) }), 'Bank disconnected');
+  },
+
   // Places you tour ───────────────────────────────────────────────────────────
   savePlace(input: Omit<Place, 'createdAt' | 'updatedAt' | 'id'> & { id?: ID }): Result {
     if (!input.name.trim()) return fail({ name: 'Give it a name you will recognise.' });

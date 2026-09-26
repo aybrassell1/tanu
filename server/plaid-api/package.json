@@ -1,0 +1,10 @@
+{
+  "name": "tanu-plaid-api",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Pass-through for Plaid, so the app never holds the secret.",
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "~5.9.2"
+  }
+}

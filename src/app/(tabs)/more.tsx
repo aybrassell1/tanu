@@ -55,6 +55,7 @@ const GROUPS: { title: string; links: Link[] }[] = [
       { title: 'IOUs', subtitle: 'Money lent to or borrowed from people', icon: 'users', href: '/ious' },
       { title: 'Categories', subtitle: 'Spending and income categories', icon: 'tag', href: '/categories' },
       { title: 'Tidy up', subtitle: 'File transactions that have no category', icon: 'check-square', href: '/tidy' },
+      { title: 'Connected accounts', subtitle: 'Let your bank send transactions in', icon: 'link', href: '/connect' },
       { title: 'Settings & data', subtitle: 'Backup, import and privacy', icon: 'settings', href: '/settings' },
     ],
   },

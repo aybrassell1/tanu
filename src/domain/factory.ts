@@ -1,7 +1,7 @@
 import { buildDefaultCategories } from './defaultCategories';
 import type { DashboardWidgetId, ID, LedgerData, Settings, TaxProfile } from './types';
 
-export const SCHEMA_VERSION = 5;
+export const SCHEMA_VERSION = 6;
 
 let counter = 0;
 
@@ -81,5 +81,6 @@ export function emptyLedger(): LedgerData {
     scenarios: [],
     places: [],
     tourQuestions: [],
+    connections: [],
   };
 }
