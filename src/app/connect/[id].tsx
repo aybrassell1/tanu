@@ -4,7 +4,7 @@ import { StyleSheet, View } from 'react-native';
 
 import { Banner, Button, Card, EmptyState, ListRow, Money, NavHeader, Pill, Row, Screen, Section, StatTile, Text, useOverlay } from '@/components/ui';
 import { formatDate } from '@/domain/dates';
-import { planSync, type SyncResult, type SyncRow } from '@/domain/plaidSync';
+import { isSandbox, planSync, type SyncResult, type SyncRow } from '@/domain/plaidSync';
 import { PlaidError, syncAll, type BankApi } from '@/lib/plaid';
 import { useData, useToday } from '@/store/hooks';
 import { ledger } from '@/store/ledger';
@@ -118,6 +118,14 @@ export default function SyncScreen() {
 
       {state === 'ready' && !nothingToDo && plan && (
         <>
+          {isSandbox(connection.accessToken) && (
+            <Banner
+              tone="warning"
+              icon="alert-triangle"
+              title="These transactions are made up"
+              message="This is Plaid's test bank. Adding them puts invented charges in your ledger, where they will look real later. Only do it if you are testing."
+            />
+          )}
           <View style={styles.tiles}>
             <StatTile label="To add" value={String(plan.counts.new + plan.counts.transfer)} icon="download" caption={plan.counts.transfer > 0 ? `${plan.counts.transfer} paired as transfers` : undefined} />
             <StatTile label="Already here" value={String(plan.counts.duplicate)} icon="check" caption="Left alone" />

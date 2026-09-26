@@ -848,6 +848,17 @@ export const ledger = {
     commit((d) => ({ ...d, connections: d.connections.map((c) => (c.id === id ? { ...c, needsAttention: reason, updatedAt: nowStamp() } : c)) }), 'Connection updated');
   },
 
+  /**
+   * Takes back everything a bank put in. The way out of a test connection
+   * whose invented charges would otherwise sit in your ledger looking real.
+   */
+  removeConnectionTransactions(id: ID): Result<number> {
+    const count = get().transactions.filter((t) => t.connectionId === id).length;
+    if (!count) return ok(0);
+    commit((d) => ({ ...d, transactions: d.transactions.filter((t) => t.connectionId !== id) }), `Removed ${count} imported transactions`);
+    return ok(count);
+  },
+
   /** Forgets the bank here. Removing it at Plaid is a separate call. */
   deleteConnection(id: ID) {
     commit((d) => ({ ...d, connections: d.connections.filter((c) => c.id !== id) }), 'Bank disconnected');

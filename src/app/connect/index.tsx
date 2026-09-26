@@ -5,6 +5,7 @@ import { View } from 'react-native';
 import { accountOptions } from '@/components/finance/Pickers';
 import { Banner, Button, Card, Disclosure, EmptyState, ListRow, NavHeader, Pill, Row, Screen, Section, SelectField, Text, TextField, useOverlay } from '@/components/ui';
 import { relativePhrase } from '@/domain/dates';
+import { isSandbox } from '@/domain/plaidSync';
 import type { BankConnection } from '@/domain/types';
 import { accounts as fetchAccounts, exchange, institutionName, linkSupported, linkToken, openLink, PlaidError, type BankApi } from '@/lib/plaid';
 import { useData, useSettings, useToday } from '@/store/hooks';
@@ -95,6 +96,18 @@ export default function ConnectScreen() {
     toast({ message: 'Bank disconnected', actionLabel: 'Undo', onAction: ledger.undo });
   };
 
+  const removeImported = async (connection: BankConnection, count: number) => {
+    const ok = await confirm({
+      title: `Remove ${count} imported ${count === 1 ? 'transaction' : 'transactions'}?`,
+      message: `Everything ${connection.institutionName} put in goes. Anything you typed yourself stays.`,
+      confirmLabel: 'Remove them',
+      destructive: true,
+    });
+    if (!ok) return;
+    const result = ledger.removeConnectionTransactions(connection.id);
+    if (result.ok) toast({ message: `Removed ${result.id}`, actionLabel: 'Undo', onAction: ledger.undo });
+  };
+
   return (
     <Screen header={<NavHeader title="Connected accounts" />}>
       {!linkSupported() && (
@@ -133,6 +146,7 @@ export default function ConnectScreen() {
             ) : (
               data.connections.map((connection) => {
                 const mapped = connection.accounts.filter((a) => a.accountId).length;
+                const imported = data.transactions.filter((t) => t.connectionId === connection.id).length;
                 return (
                   <Card key={connection.id} style={{ gap: spacing.sm }}>
                     <ListRow
@@ -141,6 +155,14 @@ export default function ConnectScreen() {
                       subtitle={connection.lastSyncedAt ? `Synced ${relativePhrase(connection.lastSyncedAt.slice(0, 10), today)} · ${mapped} of ${connection.accounts.length} accounts` : `${mapped} of ${connection.accounts.length} accounts linked`}
                       trailing={<Pill size="sm" tone={connection.needsAttention ? 'negative' : mapped > 0 ? 'positive' : 'muted'} label={connection.needsAttention ? 'Needs sign-in' : mapped > 0 ? 'Ready' : 'Set up'} />}
                     />
+                    {isSandbox(connection.accessToken) && (
+                      <Banner
+                        tone="warning"
+                        icon="alert-triangle"
+                        title="Test bank — the money here is invented"
+                        message="Fine for checking the wiring. Don't file these into a real account: a week later they look exactly like charges you made. Switch the server to production when you're ready for your own bank."
+                      />
+                    )}
                     {!!connection.needsAttention && (
                       <Banner tone="warning" icon="alert-circle" title="This bank wants you to sign in again" message={connection.needsAttention} />
                     )}
@@ -170,6 +192,15 @@ export default function ConnectScreen() {
                       <Button label={busy === connection.id ? 'Opening…' : 'Reconnect'} variant="ghost" size="sm" onPress={() => repair(connection)} />
                       <Button label="Remove" variant="ghost" size="sm" onPress={() => disconnect(connection)} />
                     </Row>
+                    {imported > 0 && (
+                      <Button
+                        label={`Take back the ${imported} it imported`}
+                        icon="rotate-ccw"
+                        variant="ghost"
+                        size="sm"
+                        onPress={() => removeImported(connection, imported)}
+                      />
+                    )}
                   </Card>
                 );
               })

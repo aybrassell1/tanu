@@ -71,6 +71,13 @@ export interface SyncResult {
   counts: { new: number; transfer: number; duplicate: number; unmapped: number; pending: number };
 }
 
+/**
+ * Whether a connection is Plaid's test environment, where the banks and the
+ * money are invented. Worth saying out loud: fake charges filed into a real
+ * account are indistinguishable from real ones a week later.
+ */
+export const isSandbox = (accessToken: string) => accessToken.startsWith('access-sandbox');
+
 /** Plaid deals in dollars as floats; everything here is integer cents. */
 export const toCents = (amount: number): Cents => Math.round(amount * 100);
 
