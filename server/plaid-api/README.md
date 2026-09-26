@@ -47,7 +47,9 @@ redeploy, and reconnect your banks. Sandbox items don't carry over.
 
 A plain GET says how it is configured, without a key and without calling Plaid:
 
-
+```bash
+curl https://your-project.vercel.app/api/plaid
+```
 
 It answers with the environment it would use and whether each variable is set —
 names and yes/no, never a value. An env of production and three trues means the
