@@ -5,7 +5,8 @@ import { StyleSheet, View } from 'react-native';
 import { Banner, Button, Card, EmptyState, ListRow, Money, NavHeader, Pill, Row, Screen, Section, StatTile, Text, useOverlay } from '@/components/ui';
 import { formatDate } from '@/domain/dates';
 import { isSandbox, planSync, type SyncResult, type SyncRow } from '@/domain/plaidSync';
-import { PlaidError, syncAll, type BankApi } from '@/lib/plaid';
+import { bankBalanceOf } from '@/domain/balanceCheck';
+import { accounts as fetchAccounts, PlaidError, syncAll, type BankApi } from '@/lib/plaid';
 import { useData, useToday } from '@/store/hooks';
 import { ledger } from '@/store/ledger';
 import { colors, spacing } from '@/theme/tokens';
@@ -40,6 +41,16 @@ export default function SyncScreen() {
     setError(null);
     try {
       const payload = await syncAll(api, connection.accessToken, connection.cursor);
+      // What each account holds, noted beside it. Nothing is adjusted here.
+      try {
+        const info = await fetchAccounts(api, connection.accessToken);
+        const balances = info.accounts
+          .map((a) => ({ externalId: a.account_id, balance: bankBalanceOf(a.balances) }))
+          .filter((b): b is { externalId: string; balance: number } => b.balance !== undefined);
+        if (balances.length) ledger.recordBalances(connection.id, balances);
+      } catch {
+        // A bank that won't give balances still gives transactions.
+      }
       setPlan(planSync(data, connection.id, payload));
       setCursor(payload.next_cursor);
       setState('ready');

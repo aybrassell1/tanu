@@ -712,6 +712,9 @@ export interface ConnectedAccount {
   subtype?: string;
   /** The account here that it maps to. Unmapped accounts are not synced. */
   accountId?: ID;
+  /** What the bank last said the balance was, and when it said it. */
+  lastBalance?: Cents;
+  lastBalanceAt?: Timestamp;
 }
 
 /**

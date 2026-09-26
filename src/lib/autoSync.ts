@@ -10,9 +10,10 @@
 
 import { useEffect, useRef } from 'react';
 
+import { bankBalanceOf } from '@/domain/balanceCheck';
 import { planSync } from '@/domain/plaidSync';
 import type { BankConnection, LedgerData } from '@/domain/types';
-import { PlaidError, syncAll, type BankApi } from '@/lib/plaid';
+import { accounts as fetchAccounts, PlaidError, syncAll, type BankApi } from '@/lib/plaid';
 import { useLedgerStore, ledger } from '@/store/ledger';
 
 /** How stale a connection has to be before opening the app goes and looks. */
@@ -50,6 +51,7 @@ export async function runAutoSync(data: LedgerData, now = Date.now()): Promise<A
 
     try {
       const payload = await syncAll(api, connection.accessToken, connection.cursor);
+      await noteBalances(api, connection);
       // Always read the freshest ledger: an earlier bank in this loop may have
       // just written, and planning against a stale copy would duplicate rows.
       const current = useLedgerStore.getState().data;
@@ -79,6 +81,23 @@ export async function runAutoSync(data: LedgerData, now = Date.now()): Promise<A
     }
   }
   return outcomes;
+}
+
+/**
+ * Asks what each account holds and writes it down beside the account. A bank
+ * that answers the transactions call but not this one is not worth failing a
+ * sync over.
+ */
+async function noteBalances(api: BankApi, connection: BankConnection): Promise<void> {
+  try {
+    const info = await fetchAccounts(api, connection.accessToken);
+    const balances = info.accounts
+      .map((a) => ({ externalId: a.account_id, balance: bankBalanceOf(a.balances) }))
+      .filter((b): b is { externalId: string; balance: number } => b.balance !== undefined);
+    if (balances.length) ledger.recordBalances(connection.id, balances);
+  } catch {
+    // The transactions are the point; a missing balance is a smaller loss.
+  }
 }
 
 /**

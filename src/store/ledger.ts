@@ -792,6 +792,28 @@ export const ledger = {
     return ok(connection.id);
   },
 
+  /**
+   * Notes what the bank says each account holds. Only a note: balances here
+   * are still derived from transactions, and nothing is adjusted until you
+   * say so.
+   */
+  recordBalances(id: ID, balances: { externalId: string; balance: Cents }[]) {
+    const at = nowStamp();
+    const byId = new Map(balances.map((b) => [b.externalId, b.balance]));
+    commit((d) => ({
+      ...d,
+      connections: d.connections.map((c) =>
+        c.id === id
+          ? {
+              ...c,
+              accounts: c.accounts.map((a) => (byId.has(a.externalId) ? { ...a, lastBalance: byId.get(a.externalId), lastBalanceAt: at } : a)),
+              updatedAt: at,
+            }
+          : c,
+      ),
+    }), 'Balances noted');
+  },
+
   /** Points one of the bank's accounts at an account in your ledger. */
   mapConnectionAccount(id: ID, externalId: string, accountId: ID | undefined) {
     commit((d) => ({

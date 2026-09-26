@@ -3,13 +3,14 @@ import { useMemo, useState } from 'react';
 import { View } from 'react-native';
 
 import { accountOptions } from '@/components/finance/Pickers';
-import { Banner, Button, Card, Disclosure, EmptyState, ListRow, NavHeader, Pill, Row, Screen, Section, SelectField, SwitchRow, Text, TextField, useOverlay } from '@/components/ui';
+import { Banner, Button, Card, Disclosure, EmptyState, KeyValue, ListRow, Money, NavHeader, Pill, Row, Screen, Section, SelectField, SwitchRow, Text, TextField, useOverlay } from '@/components/ui';
+import { balanceChecks, balanceDisagreements } from '@/domain/balanceCheck';
 import { relativePhrase } from '@/domain/dates';
 import { isSandbox } from '@/domain/plaidSync';
 import type { BankConnection } from '@/domain/types';
 import { accounts as fetchAccounts, exchange, institutionName, linkToken, PlaidError, type BankApi } from '@/lib/plaid';
 import { linkSupported, openLink } from '@/lib/plaidLink';
-import { useData, useSettings, useToday } from '@/store/hooks';
+import { useData, useMoney, useSettings, useToday } from '@/store/hooks';
 import { ledger } from '@/store/ledger';
 import { colors, spacing } from '@/theme/tokens';
 
@@ -27,6 +28,7 @@ export default function ConnectScreen() {
   const settings = useSettings();
   const today = useToday();
   const { confirm, toast } = useOverlay();
+  const money = useMoney();
 
   const saved = settings.bankApi;
   const [url, setUrl] = useState(saved?.url ?? '');
@@ -35,6 +37,8 @@ export default function ConnectScreen() {
   const [error, setError] = useState<string | null>(null);
 
   const api: BankApi | null = saved?.url && saved.key ? saved : null;
+  const checks = useMemo(() => balanceChecks(data, today), [data, today]);
+  const off = balanceDisagreements(checks);
   const options = useMemo(() => accountOptions(data, today), [data, today]);
 
   const saveApi = () => {
@@ -95,6 +99,11 @@ export default function ConnectScreen() {
     if (!(await confirm({ title: `Disconnect ${connection.institutionName}?`, message: 'Transactions already imported stay. Nothing new will arrive.', confirmLabel: 'Disconnect', destructive: true }))) return;
     ledger.deleteConnection(connection.id);
     toast({ message: 'Bank disconnected', actionLabel: 'Undo', onAction: ledger.undo });
+  };
+
+  const reconcile = (accountId: string, name: string, balance: number) => {
+    const result = ledger.updateBalance(accountId, balance, today, 'reconcile', 'From your bank');
+    if (result.ok) toast({ message: `${name} set to what the bank says`, actionLabel: 'Undo', onAction: ledger.undo });
   };
 
   const removeImported = async (connection: BankConnection, count: number) => {
@@ -210,6 +219,42 @@ export default function ConnectScreen() {
               <Button label={busy === 'connect' ? 'Opening…' : 'Connect another bank'} icon="plus" variant="secondary" fullWidth onPress={connect} />
             )}
           </Section>
+
+          {checks.length > 0 && (
+            <Section title="What your bank says" subtitle="Balances here are added up from transactions; this is the second opinion">
+              <Card style={{ gap: spacing.sm }}>
+                {checks.map((check) => (
+                  <View key={`${check.connectionId}:${check.externalId}`} style={{ gap: 4 }}>
+                    <KeyValue
+                      label={check.accountName}
+                      hint={check.agrees ? 'Matches' : `Off by ${money(Math.abs(check.difference))}`}
+                    >
+                      <View style={{ alignItems: 'flex-end' }}>
+                        <Money cents={check.bank} weight="semibold" />
+                        <Text variant="caption" color={colors.textTertiary}>
+                          {check.agrees ? 'agreed' : `app says ${money(check.derived)}`}
+                        </Text>
+                      </View>
+                    </KeyValue>
+                    {!check.agrees && (
+                      <Button
+                        label={`Record the ${money(Math.abs(check.difference))} difference`}
+                        icon="check"
+                        variant="ghost"
+                        size="sm"
+                        onPress={() => reconcile(check.accountId, check.accountName, check.bank)}
+                      />
+                    )}
+                  </View>
+                ))}
+                {off.checks.length > 0 && (
+                  <Text variant="caption" color={colors.textTertiary}>
+                    A difference usually means something never came across — a fee, a pending charge, or a starting balance that was a guess. Recording it adds one adjustment, which you can undo.
+                  </Text>
+                )}
+              </Card>
+            </Section>
+          )}
 
           {data.connections.length > 0 && (
             <Section title="How much it does on its own">
