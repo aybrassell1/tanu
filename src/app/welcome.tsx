@@ -2,7 +2,9 @@ import Feather from '@expo/vector-icons/Feather';
 import { useRouter } from 'expo-router';
 import { Image, StyleSheet, View } from 'react-native';
 
-import { Button, GradientCard, Pill, Screen, Text } from '@/components/ui';
+import { Button, GradientCard, Pill, Screen, Text, useOverlay } from '@/components/ui';
+import { parseBackup } from '@/domain/backup';
+import { pickTextFile } from '@/store/fileIO';
 import type { IconName } from '@/data/icons';
 import { ledger } from '@/store/ledger';
 import { colors, spacing } from '@/theme/tokens';
@@ -15,6 +17,33 @@ const POINTS: { icon: IconName; title: string; body: string }[] = [
 
 export default function WelcomeScreen() {
   const router = useRouter();
+  const { confirm, toast } = useOverlay();
+
+  /**
+   * Arriving with a ledger already on another device is normal rather than a
+   * mistake: a home-screen app on iOS has its own storage, separate from the
+   * browser it was added from.
+   */
+  const restore = async () => {
+    try {
+      const file = await pickTextFile();
+      if (!file) return;
+      const result = parseBackup(file.text);
+      const warnings = result.warnings.length ? `\n\nWarnings: ${result.warnings.join(' ')}` : '';
+      const ok = await confirm({
+        title: 'Restore this backup?',
+        message: `${file.name} becomes the data in this copy of Tanu.${warnings}`,
+        confirmLabel: 'Restore',
+      });
+      if (!ok) return;
+      ledger.replaceAllData(result.data);
+      toast({ message: 'Backup restored' });
+      router.replace('/');
+    } catch (e) {
+      toast({ message: `That backup could not be read: ${e instanceof Error ? e.message : 'unknown error'}`, tone: 'error' });
+    }
+  };
+
   const start = (sample: boolean) => {
     // Setup marks onboarding complete once it finishes, so a half-done setup can be resumed.
     if (sample) ledger.loadSampleData();
@@ -57,6 +86,13 @@ export default function WelcomeScreen() {
       <View style={{ gap: spacing.md }}>
         <Button label="Start with my own data" size="lg" fullWidth trailingIcon="arrow-right" onPress={() => start(false)} />
         <Button label="Explore with sample data" size="lg" variant="secondary" fullWidth onPress={() => start(true)} />
+        {/*
+          A phone's home-screen app has its own storage, separate from the
+          browser it was added from, so arriving here with a ledger already
+          elsewhere is normal rather than a mistake. Restoring belongs on the
+          first screen, not buried in Settings.
+        */}
+        <Button label="Restore from a backup" size="lg" variant="ghost" fullWidth icon="upload" onPress={restore} />
         <Text variant="small" color={colors.textTertiary} align="center">
           Sample data is clearly marked and can be erased in one tap from Settings.
         </Text>
