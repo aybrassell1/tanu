@@ -73,6 +73,7 @@ Commands: `npm run typecheck`, `npm test` (vitest, domain logic), `npm run web`.
 - Pending charges are held back until they settle, and an account the user hasn't mapped is ignored entirely.
 - `lib/autoSync.ts` catches up when the app opens — the only chance a phone gets, since there is no server to poll. It skips a bank synced in the last 4 hours, one asking for a new sign-in, and one whose accounts point nowhere. With `settings.autoSync.autoAdd` on (the default) it applies the plan itself; a broken login is flagged, any other error stays quiet.
 - Balances stay derived. A sync writes what the bank said onto `connection.accounts[].lastBalance` and nothing else; `domain/balanceCheck.ts` compares it with `balanceOn` and the user reconciles by hand through `ledger.updateBalance`. Never overwrite a derived balance silently — the gap is the thing worth knowing.
+- Notifications are the one thing that keeps state on a server: `server/plaid-api/api/enroll.ts` stores an encrypted access token, a cursor of its own and a push subscription per item, so `api/webhook.ts` can say what the charge was. That cursor is deliberately separate from the app's. A webhook is dropped unless Plaid's ES256 signature verifies, it is under five minutes old, and the body hash matches.
 - Any copy about privacy has to stay true: the app still never asks for a bank password, but with a bank connected the data does pass through the user's own deployment.
 
 ## Splits & side ledgers

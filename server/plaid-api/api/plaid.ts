@@ -37,7 +37,7 @@ const PLAID_HOSTS: Record<string, string> = {
  * parameters into a Plaid request.
  */
 const ACTIONS: Record<string, { path: string; fields: string[] }> = {
-  link_token: { path: '/link/token/create', fields: ['user', 'client_name', 'products', 'country_codes', 'language', 'redirect_uri', 'access_token'] },
+  link_token: { path: '/link/token/create', fields: ['user', 'client_name', 'products', 'country_codes', 'language', 'redirect_uri', 'access_token', 'webhook'] },
   exchange: { path: '/item/public_token/exchange', fields: ['public_token'] },
   sync: { path: '/transactions/sync', fields: ['access_token', 'cursor', 'count', 'options'] },
   accounts: { path: '/accounts/get', fields: ['access_token'] },

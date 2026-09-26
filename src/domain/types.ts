@@ -682,7 +682,9 @@ export interface Settings {
   /** Merchant fingerprints you have said are not a recurring bill. */
   ignoredRecurring?: string[];
   /** Your own Plaid pass-through: where it is deployed, and the key for it. */
-  bankApi?: { url: string; key: string };
+  bankApi?: { url: string; key: string; vapidPublicKey?: string };
+  /** Whether a connected bank should push a notification when money moves. */
+  transactionAlerts?: boolean;
   /**
    * How much a connected bank does on its own. Both default to on: there is no
    * server to poll for you, so opening the app is the only chance to catch up.

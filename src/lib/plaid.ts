@@ -13,6 +13,8 @@ import type { PlaidTransaction, SyncPayload } from '@/domain/plaidSync';
 export interface BankApi {
   url: string;
   key: string;
+  /** Identifies the server to the browser when subscribing to notifications. */
+  vapidPublicKey?: string;
 }
 
 export class PlaidError extends Error {

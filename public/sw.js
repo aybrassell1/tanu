@@ -61,3 +61,41 @@ self.addEventListener('fetch', (event) => {
       .catch(() => caches.match(request).then((hit) => hit ?? caches.match('./'))),
   );
 });
+
+/*
+ * Notifications.
+ *
+ * The server sends a title and a line of text and nothing else; the details
+ * live on the device, which is where they came from. Tapping brings the app
+ * forward if it is already open rather than stacking another copy.
+ */
+self.addEventListener('push', (event) => {
+  let payload = { title: 'Tanu', body: 'Something new arrived.' };
+  try {
+    if (event.data) payload = { ...payload, ...event.data.json() };
+  } catch (e) {
+    // A push we can't read is still worth surfacing.
+  }
+  event.waitUntil(
+    self.registration.showNotification(payload.title, {
+      body: payload.body,
+      icon: './assets/apple-touch-icon.png',
+      badge: './assets/apple-touch-icon.png',
+      tag: 'tanu-transactions',
+      data: { url: './' },
+    }),
+  );
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const target = new URL(event.notification.data?.url ?? './', self.location.href).href;
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windows) => {
+      for (const client of windows) {
+        if ('focus' in client) return client.focus();
+      }
+      return self.clients.openWindow ? self.clients.openWindow(target) : undefined;
+    }),
+  );
+});

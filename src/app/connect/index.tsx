@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { View } from 'react-native';
 
 import { accountOptions } from '@/components/finance/Pickers';
@@ -12,6 +12,7 @@ import { isSandbox } from '@/domain/plaidSync';
 import type { BankConnection, ConnectedAccount } from '@/domain/types';
 import { accounts as fetchAccounts, exchange, institutionName, linkToken, PlaidError, type BankApi } from '@/lib/plaid';
 import { linkSupported, openLink } from '@/lib/plaidLink';
+import { enroll, installedAsApp, pushState, pushSupported, subscribe, unsubscribe, type PushState } from '@/lib/pushAlerts';
 import { useData, useMoney, useSettings, useToday } from '@/store/hooks';
 import { ledger } from '@/store/ledger';
 import { colors, spacing } from '@/theme/tokens';
@@ -35,7 +36,9 @@ export default function ConnectScreen() {
   const saved = settings.bankApi;
   const [url, setUrl] = useState(saved?.url ?? '');
   const [key, setKey] = useState(saved?.key ?? '');
+  const [vapid, setVapid] = useState(saved?.vapidPublicKey ?? '');
   const [busy, setBusy] = useState<string | null>(null);
+  const [alerts, setAlerts] = useState<PushState>('unsupported');
   const [error, setError] = useState<string | null>(null);
 
   const api: BankApi | null = saved?.url && saved.key ? saved : null;
@@ -56,10 +59,52 @@ export default function ConnectScreen() {
     toast({ message: `${account.name} added`, actionLabel: 'Undo', onAction: ledger.undo });
   };
 
+  useEffect(() => {
+    void pushState().then(setAlerts);
+  }, []);
+
+  /**
+   * Turning this on hands the server your access token, encrypted, so it can
+   * say what you were charged rather than only that something happened.
+   * Turning it off deletes that record for every bank.
+   */
+  const toggleAlerts = async (on: boolean) => {
+    if (!api) return;
+    setBusy('alerts');
+    setError(null);
+    try {
+      if (!on) {
+        for (const connection of data.connections) await enroll(api, connection, null);
+        await unsubscribe();
+        ledger.updateSettings({ transactionAlerts: false });
+        setAlerts('off');
+        toast({ message: 'Notifications off, and the server has forgotten your banks' });
+        return;
+      }
+      if (!api.vapidPublicKey) {
+        setError('Add the VAPID public key from your server before turning notifications on.');
+        return;
+      }
+      const subscription = await subscribe(api.vapidPublicKey);
+      if (!subscription) {
+        setAlerts(await pushState());
+        return;
+      }
+      for (const connection of data.connections) await enroll(api, connection, subscription);
+      ledger.updateSettings({ transactionAlerts: true });
+      setAlerts('on');
+      toast({ message: 'Your phone will say when money moves' });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'That could not be set up.');
+    } finally {
+      setBusy(null);
+    }
+  };
+
   const saveApi = () => {
     const trimmed = url.trim().replace(/\/+$/, '');
     if (!trimmed || !key.trim()) return setError('Both the address and the key are needed.');
-    ledger.updateSettings({ bankApi: { url: trimmed, key: key.trim() } });
+    ledger.updateSettings({ bankApi: { url: trimmed, key: key.trim(), vapidPublicKey: vapid.trim() || undefined } });
     setError(null);
     toast({ message: 'Server saved' });
   };
@@ -161,6 +206,15 @@ export default function ConnectScreen() {
             <Card style={{ gap: spacing.md }}>
               <TextField label="Address" value={url} onChangeText={setUrl} placeholder="https://your-project.vercel.app" autoCapitalize="none" keyboardType="url" />
               <TextField label="Key" value={key} onChangeText={setKey} placeholder="The APP_KEY you set" autoCapitalize="none" secureTextEntry error={error ?? undefined} />
+              <TextField
+                label="Notification key"
+                value={vapid}
+                onChangeText={setVapid}
+                placeholder="VAPID_PUBLIC_KEY"
+                autoCapitalize="none"
+                hint="Only needed for notifications. Safe to share: it identifies your server, it does not authorise anything."
+                optional
+              />
               <Button label="Save" size="lg" fullWidth onPress={saveApi} />
             </Card>
           </Section>
@@ -309,6 +363,43 @@ export default function ConnectScreen() {
                 <Text variant="caption" color={colors.textTertiary}>
                   Either way a sync is a single undo, and everything it adds shows up in Activity like anything else.
                 </Text>
+              </Card>
+            </Section>
+          )}
+
+          {data.connections.length > 0 && pushSupported() && (
+            <Section title="Telling you when money moves">
+              <Card style={{ gap: spacing.sm }}>
+                {!installedAsApp() ? (
+                  <Banner
+                    tone="muted"
+                    icon="smartphone"
+                    title="Add Tanu to your home screen first"
+                    message="iOS only allows notifications from an installed app, never from a browser tab. Share → Add to Home Screen, then open it from there."
+                  />
+                ) : alerts === 'denied' ? (
+                  <Banner
+                    tone="warning"
+                    icon="bell-off"
+                    title="Notifications are blocked"
+                    message="Turn them back on for Tanu in iOS Settings → Notifications, then come back here."
+                  />
+                ) : (
+                  <>
+                    <SwitchRow
+                      label={busy === 'alerts' ? 'Just a moment…' : 'Notify me when a charge arrives'}
+                      description="Your bank tells the server, the server tells your phone. Works with the app closed."
+                      value={alerts === 'on'}
+                      onChange={(v) => void toggleAlerts(v)}
+                    />
+                    <Banner
+                      tone={alerts === 'on' ? 'muted' : 'primary'}
+                      icon="alert-circle"
+                      title="This one costs something"
+                      message="To name the merchant and the amount, your server keeps your access token — encrypted, but able to read the account. Everything else here holds nothing. Turning this off deletes it."
+                    />
+                  </>
+                )}
               </Card>
             </Section>
           )}

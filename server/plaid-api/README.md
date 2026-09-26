@@ -43,6 +43,53 @@ access token and your transactions live on your phone, not here.
 Switch `PLAID_SECRET` to your Production secret and `PLAID_ENV` to `production`,
 redeploy, and reconnect your banks. Sandbox items don't carry over.
 
+## Notifications when money moves (optional)
+
+Skip this and everything else still works; the app will just catch up when you
+open it. With it, Plaid tells this deployment a charge arrived and it tells your
+phone, with the merchant and the amount.
+
+**What this costs.** Everything above stores nothing. This does: one record per
+bank, holding your Plaid access token so the server can read what the charge
+was. It is encrypted with a key that lives in an environment variable, so the
+database on its own is not enough — but it is a real change, and turning
+notifications off in the app deletes the record.
+
+1. **A place to keep it.** In Vercel, **Storage → Create → Upstash Redis** (free
+   tier, and it doesn't sleep). Vercel adds `UPSTASH_REDIS_REST_URL` and
+   `UPSTASH_REDIS_REST_TOKEN` to the project for you.
+
+2. **Keys.** Two more environment variables:
+
+   ```bash
+   # A 32-byte key for the token at rest
+   openssl rand -base64 32
+
+   # And the pair that identifies your server to the browser
+   npx web-push generate-vapid-keys
+   ```
+
+   | Name | Value |
+   | --- | --- |
+   | `ENCRYPTION_KEY` | the base64 from the first command |
+   | `VAPID_PUBLIC_KEY` | from the second |
+   | `VAPID_PRIVATE_KEY` | from the second |
+   | `VAPID_SUBJECT` | `mailto:you@example.com` |
+
+   `ENCRYPTION_KEY` and `VAPID_PRIVATE_KEY` are Secret; the public key is not.
+
+3. **Tell Plaid where to call.** In the Plaid dashboard, set the webhook to
+   `https://your-project.vercel.app/api/webhook`. Existing connections need
+   reconnecting to pick it up; new ones get it automatically.
+
+4. **In the app**, put `VAPID_PUBLIC_KEY` in the notification key field on the
+   Connected accounts screen, then turn the switch on. **iOS only allows this
+   from an app added to the home screen** — in a browser tab the switch says so
+   and stays off.
+
+Webhooks that are not signed by Plaid, are older than five minutes, or whose
+body doesn't match the signature are dropped without a word.
+
 ## Checking it is alive
 
 A plain GET says how it is configured, without a key and without calling Plaid:

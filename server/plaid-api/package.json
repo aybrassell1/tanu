@@ -6,6 +6,10 @@
   "description": "Pass-through for Plaid, so the app never holds the secret.",
   "devDependencies": {
     "@types/node": "^22.10.2",
-    "typescript": "~5.9.2"
+    "typescript": "~5.9.2",
+    "@types/web-push": "^3.6.4"
+  },
+  "dependencies": {
+    "web-push": "^3.6.7"
   }
 }
