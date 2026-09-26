@@ -11,7 +11,7 @@ Commands: `npm run typecheck`, `npm test` (vitest, domain logic), `npm run web`.
 ## Architecture
 
 - `src/domain/` — pure, framework-free financial logic. **All money is integer cents; all dates are `YYYY-MM-DD` strings.** Never do money math in screens that the domain already provides.
-  - `types.ts` data model · `catalog.ts` enum metadata (labels/icons) · `ledger.ts` postings, balances, classification · `schedule.ts` scheduled events (bills, paychecks, debt due dates) · `position.ts` net worth + available-to-spend · `reports.ts` period stats & monthly review · `budgets.ts` · `goals.ts` · `debt.ts` (summary + payoff simulation) · `forecast.ts` · `scenarios.ts` · `alerts.ts` · `search.ts` · `validation.ts` · `backup.ts` · `sample.ts` · `merchantText.ts` (statement text → merchant fingerprint) · `merchants.ts` (what you usually do with a merchant) · `recurringDetect.ts` (bills found in real spending).
+  - `types.ts` data model · `catalog.ts` enum metadata (labels/icons) · `ledger.ts` postings, balances, classification · `schedule.ts` scheduled events (bills, paychecks, debt due dates) · `position.ts` net worth + available-to-spend · `reports.ts` period stats & monthly review · `budgets.ts` · `goals.ts` · `debt.ts` (summary + payoff simulation) · `forecast.ts` · `scenarios.ts` · `alerts.ts` · `search.ts` · `validation.ts` · `backup.ts` · `sample.ts` · `merchantText.ts` (statement text → merchant fingerprint) · `merchants.ts` (what you usually do with a merchant) · `recurringDetect.ts` (bills found in real spending) · `places.ts` (apartment tours: questions, true cost, grade).
 - `src/store/ledger.ts` — the single zustand store. Mutate **only** through `ledger.*` actions; they validate and return `Result` (`{ ok: true, id } | { ok: false, errors }`). Destructive actions are undoable via `ledger.undo()`.
 - `src/store/hooks.ts` — `useData()`, `useToday()`, `useSettings()`, `useMoney()` (formatter honoring currency + privacy mode), `useDerived(fn)`.
 - `src/components/ui/` — design system (import from `@/components/ui`). `src/components/finance/` — shared finance rows (`TransactionRow`, `EventRow`, `AccountRow`, `DateBadge`) and pickers (`AccountSelect`, `CategorySelect`, `FrequencySelect`, `MonthSwitcher`, `accountOptions`, `categoryOptions`).
@@ -52,6 +52,14 @@ Commands: `npm run typecheck`, `npm test` (vitest, domain logic), `npm run web`.
 - A habit needs at least 2 past transactions with 60% agreement. Splits and archived categories are never learned from, and money in is kept apart from money out.
 - `domain/recurringDetect.ts` finds bills and subscriptions you already pay but haven't tracked: three charges on a steady rhythm, 60% of the gaps matching. It skips anything already tracked (by merchant fingerprint or `recurringId`) and anything in `settings.ignoredRecurring`. Tracking one opens `/bills/edit` prefilled; the screen is `/bills/detected`.
 - Suggestions are defaults, never decisions: filling a field is fine, writing to the ledger without the user is not. Bulk filing goes through `ledger.categorizeTransactions` so it is a single undo.
+
+## Apartment tours
+
+- `domain/places.ts` holds the tour checklist (`TOUR_QUESTIONS`), what a place really costs (`placeCost`) and the grade (`scorePlace`, `rankPlaces`). Screens: `/places`, `/places/[id]` (the surface you hold on the tour) and `/places/edit` (the numbers).
+- The grade is 55 points for affordability (through `rentAffordability`, so it matches the rent calculator), 25 for your 1–5 ratings and 20 for the scored yes/no questions. **An unanswered question never counts against a place**, and a part you have not filled in is never named as the weak one.
+- With no income recorded `scorePlace` returns `grade: null` and `basis: 'no_income'`: a letter there would be a guess dressed up as a judgement.
+- `data.places` are notes, not money. They never post to balances, never appear in the forecast, and only moving in and recording the rent changes anything.
+- Answers, ratings and notes save as you tap or type (debounced), so `savePlace` deliberately keeps the existing `answers`/`ratings`/`photos`/`notes` instead of overwriting them from the costs form.
 
 ## Splits & side ledgers
 

@@ -31,6 +31,8 @@ import type {
   Scenario,
   Iou,
   IouEntry,
+  Place,
+  PlaceStatus,
   Policy,
   Settings,
   SinkingEntry,
@@ -768,6 +770,68 @@ export const ledger = {
   },
 
   // Settings & data ───────────────────────────────────────────────────────────
+  // Places you tour ───────────────────────────────────────────────────────────
+  savePlace(input: Omit<Place, 'createdAt' | 'updatedAt' | 'id'> & { id?: ID }): Result {
+    if (!input.name.trim()) return fail({ name: 'Give it a name you will recognise.' });
+    const existing = input.id ? get().places.find((x) => x.id === input.id) : undefined;
+    const place: Place = {
+      ...input,
+      name: input.name.trim(),
+      address: input.address?.trim() || undefined,
+      id: existing?.id ?? createId('place'),
+      // Answers, ratings and photos are edited on the place itself, so a save
+      // from the details form never wipes what was recorded on the tour.
+      answers: existing?.answers ?? input.answers,
+      ratings: existing?.ratings ?? input.ratings,
+      photos: existing?.photos ?? input.photos,
+      notes: existing?.notes ?? input.notes,
+      createdAt: existing?.createdAt ?? nowStamp(),
+      updatedAt: nowStamp(),
+    };
+    commit((d) => ({ ...d, places: upsert(d.places, place) }));
+    return ok(place.id);
+  },
+
+  deletePlace(id: ID) {
+    commit((d) => ({ ...d, places: d.places.filter((p) => p.id !== id) }), 'Place deleted');
+  },
+
+  /** One tap on the tour: the answer, the note, or both. */
+  answerPlaceQuestion(id: ID, questionId: string, patch: { answer?: 'yes' | 'no' | 'unsure'; note?: string }) {
+    commit((d) => ({
+      ...d,
+      places: d.places.map((place) => {
+        if (place.id !== id) return place;
+        const answers = place.answers.some((a) => a.id === questionId)
+          ? place.answers.map((a) => (a.id === questionId ? { ...a, ...patch } : a))
+          : [...place.answers, { id: questionId, ...patch }];
+        // An answer cleared back to nothing leaves no trace.
+        return { ...place, answers: answers.filter((a) => a.answer !== undefined || (a.note ?? '').trim().length > 0), updatedAt: nowStamp() };
+      }),
+    }), 'Answer recorded');
+  },
+
+  ratePlace(id: ID, ratingId: string, score: number) {
+    commit((d) => ({
+      ...d,
+      places: d.places.map((place) => {
+        if (place.id !== id) return place;
+        const ratings = place.ratings.some((r) => r.id === ratingId)
+          ? place.ratings.map((r) => (r.id === ratingId ? { ...r, score } : r))
+          : [...place.ratings, { id: ratingId, score }];
+        return { ...place, ratings: ratings.filter((r) => r.score > 0), updatedAt: nowStamp() };
+      }),
+    }), 'Rating saved');
+  },
+
+  setPlaceNotes(id: ID, notes: string) {
+    commit((d) => ({ ...d, places: d.places.map((p) => (p.id === id ? { ...p, notes: notes.trim() || undefined, updatedAt: nowStamp() } : p)) }), 'Notes saved');
+  },
+
+  setPlaceStatus(id: ID, status: PlaceStatus) {
+    commit((d) => ({ ...d, places: d.places.map((p) => (p.id === id ? { ...p, status, updatedAt: nowStamp() } : p)) }), 'Status changed');
+  },
+
   updateSettings(patch: Partial<Settings>) {
     commit((d) => ({ ...d, settings: { ...d.settings, ...patch } }));
   },

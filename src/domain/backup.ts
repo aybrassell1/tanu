@@ -79,7 +79,13 @@ export function migrate(data: LedgerData): LedgerData {
   let out = data;
   if (version < 2) out = migrateToV2(out);
   if (version < 3) out = migrateToV3(out);
+  if (version < 4) out = migrateToV4(out);
   return { ...out, meta: { ...out.meta, schemaVersion: SCHEMA_VERSION } };
+}
+
+/** v4: places you tour while apartment hunting. */
+function migrateToV4(data: LedgerData): LedgerData {
+  return { ...data, places: Array.isArray(data.places) ? data.places : [] };
 }
 
 /** v3: split transactions, sinking funds, policies, IOUs, lock and reminders. */

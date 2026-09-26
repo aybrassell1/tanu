@@ -46,7 +46,7 @@ function Cell({ children }: { children: ReactNode }) {
 }
 
 export default function AffordCalculatorScreen() {
-  const { kind } = useLocalSearchParams<{ kind: Kind }>();
+  const { kind, ...prefill } = useLocalSearchParams<{ kind: Kind; rent?: string; utilities?: string; insurance?: string; other?: string; moveIn?: string }>();
   const info = TITLES[kind as Kind];
   const snapshot = useDerived(financialSnapshot);
   if (!info) {
@@ -59,7 +59,7 @@ export default function AffordCalculatorScreen() {
   return (
     <Screen header={<NavHeader title={info.title} />}>
       {kind === 'car' && <CarCalculator s={snapshot} />}
-      {kind === 'rent' && <RentCalculator s={snapshot} />}
+      {kind === 'rent' && <RentCalculator s={snapshot} prefill={prefill} />}
       {kind === 'house' && <HouseCalculator s={snapshot} />}
       {kind === 'purchase' && <PurchaseCalculator s={snapshot} />}
     </Screen>
@@ -174,14 +174,21 @@ function CarCalculator({ s }: { s: FinancialSnapshot }) {
 
 // ─── Rent ────────────────────────────────────────────────────────────────────
 
-function RentCalculator({ s }: { s: FinancialSnapshot }) {
+type RentPrefill = { rent?: string; utilities?: string; insurance?: string; other?: string; moveIn?: string };
+
+function RentCalculator({ s, prefill = {} }: { s: FinancialSnapshot; prefill?: RentPrefill }) {
   const money = useMoney();
+  // Opened from a place you toured: start on that place's real numbers.
+  const cents = (raw: string | undefined, fallback: number) => {
+    const value = Number(raw);
+    return Number.isFinite(value) && value >= 0 ? Math.round(value) : fallback;
+  };
   const [input, setInput] = useState<RentInput>({
-    rent: s.currentHousing > 0 ? round(s.currentHousing, $(50)) : $(1_500),
-    utilities: $(150),
-    insurance: $(15),
-    other: 0,
-    moveInCosts: $(3_500),
+    rent: cents(prefill.rent, s.currentHousing > 0 ? round(s.currentHousing, $(50)) : $(1_500)),
+    utilities: cents(prefill.utilities, $(150)),
+    insurance: cents(prefill.insurance, $(15)),
+    other: cents(prefill.other, 0),
+    moveInCosts: cents(prefill.moveIn, $(3_500)),
     replaceCurrent: s.currentHousing > 0,
   });
   const set = <K extends keyof RentInput>(k: K, v: RentInput[K]) => setInput((i) => ({ ...i, [k]: v }));

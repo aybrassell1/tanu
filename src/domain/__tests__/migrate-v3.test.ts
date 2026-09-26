@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { parseBackup, serializeBackup } from '../backup';
-import { emptyLedger } from '../factory';
+import { emptyLedger, SCHEMA_VERSION } from '../factory';
 import { buildSampleLedger } from '../sample';
 
 /** A v2 snapshot knows nothing about funds, policies, IOUs, the lock or reminders. */
@@ -19,7 +19,9 @@ function v2Snapshot() {
 describe('schema v3 migration', () => {
   it('fills in the new collections and settings', () => {
     const { data, warnings } = parseBackup(v2Snapshot());
-    expect(data.meta.schemaVersion).toBe(3);
+    // An old backup comes forward through every migration, not just the next one.
+    expect(data.meta.schemaVersion).toBe(SCHEMA_VERSION);
+    expect(data.places).toEqual([]);
     expect(data.sinkingFunds).toEqual([]);
     expect(data.policies).toEqual([]);
     expect(data.ious).toEqual([]);

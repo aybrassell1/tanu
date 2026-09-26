@@ -55,6 +55,17 @@ export default function AffordHubScreen() {
         ))}
       </View>
 
+      <Card style={styles.tours} onPress={() => router.push('/places')} accessibilityLabel="Apartment tours">
+        <EmojiIcon name="key" size={40} />
+        <View style={{ flex: 1, gap: 2 }}>
+          <Text variant="h3">Apartment tours</Text>
+          <Text variant="caption" color={colors.textTertiary}>
+            The questions to ask, what each place really costs, and a grade you can compare
+          </Text>
+        </View>
+        <Feather name="arrow-up-right" size={16} color={colors.textTertiary} />
+      </Card>
+
       <Text variant="caption" color={colors.textTertiary} align="center">
         Uses your real income, spending, debts and savings. Rules of thumb, not advice.
       </Text>
@@ -67,4 +78,5 @@ const styles = StyleSheet.create({
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
   tile: { width: '47.5%', flexGrow: 1, gap: spacing.md, minHeight: 150 },
   arrow: { position: 'absolute', top: spacing.lg, right: spacing.lg },
+  tours: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
 });

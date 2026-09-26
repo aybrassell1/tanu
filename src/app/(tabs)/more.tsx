@@ -39,6 +39,7 @@ const GROUPS: { title: string; links: Link[] }[] = [
     title: 'Understand',
     links: [
       { title: 'Can I afford it?', subtitle: 'Car, rent, home or a big purchase', icon: 'check-square', href: '/afford' },
+      { title: 'Apartment tours', subtitle: 'Questions to ask, costs and a grade per place', icon: 'key', href: '/places' },
       { title: 'Spending map', subtitle: 'Where it goes, and what is easy to forget', icon: 'map', href: '/spending-map' },
       { title: 'Reports', subtitle: 'Trends, comparisons and breakdowns', icon: 'bar-chart', href: '/reports' },
       { title: 'Monthly review', subtitle: 'A full summary of any month', icon: 'book-open', href: '/review' },

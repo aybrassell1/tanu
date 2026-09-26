@@ -687,6 +687,77 @@ export interface LedgerMeta {
   updatedAt: Timestamp;
 }
 
+// ─── Places you tour ─────────────────────────────────────────────────────────
+
+export type PlaceStatus = 'touring' | 'shortlist' | 'applied' | 'chosen' | 'passed';
+
+/** An answer to one of the questions worth asking on a tour. */
+export interface PlaceAnswer {
+  /** Question id from `TOUR_QUESTIONS`. */
+  id: string;
+  /** For a yes/no question. */
+  answer?: 'yes' | 'no' | 'unsure';
+  /** What they actually said; the only place free text belongs. */
+  note?: string;
+}
+
+/** A 1–5 impression of something no number can capture, like the light. */
+export interface PlaceRating {
+  id: string;
+  score: number;
+}
+
+/**
+ * Somewhere you toured. Costs are what you would pay if you moved in; the
+ * answers and ratings are what you saw and were told while standing there.
+ */
+export interface Place {
+  id: ID;
+  name: string;
+  address?: string;
+  status: PlaceStatus;
+  touredOn?: ISODate;
+
+  // Monthly
+  rent: Cents;
+  parking: Cents;
+  petRent: Cents;
+  /** Amenity, trash, valet, pest — the fees that arrive every month. */
+  otherMonthly: Cents;
+  /** What you would pay on top for anything not included. */
+  utilitiesEstimate: Cents;
+  insurance: Cents;
+  /** Utility ids the rent covers, so they are never counted twice. */
+  included: string[];
+
+  // Up front
+  deposit: Cents;
+  applicationFee: Cents;
+  adminFee: Cents;
+  petDeposit: Cents;
+  /** Whether the first month's rent is also due at signing. */
+  firstMonthUpfront: boolean;
+
+  // The lease itself
+  leaseMonths?: number;
+  availableOn?: ISODate;
+  /** Income they require, as a multiple of monthly rent (commonly 3). */
+  incomeMultiple?: number;
+
+  // Getting to work
+  commuteMinutes?: number;
+  commuteMilesPerDay?: number;
+
+  answers: PlaceAnswer[];
+  ratings: PlaceRating[];
+  notes?: string;
+  photos: Attachment[];
+  tags: string[];
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+
 export interface LedgerData {
   meta: LedgerMeta;
   settings: Settings;
@@ -706,4 +777,6 @@ export interface LedgerData {
   ious: Iou[];
   assets: Asset[];
   scenarios: Scenario[];
+  /** Places you have toured while looking for somewhere to live. */
+  places: Place[];
 }
