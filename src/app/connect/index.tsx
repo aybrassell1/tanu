@@ -111,7 +111,7 @@ export default function ConnectScreen() {
           />
           <Section title="Your server">
             <Card style={{ gap: spacing.md }}>
-              <TextField label="Address" value={url} onChangeText={setUrl} placeholder="https://tanu-plaid.vercel.app" autoCapitalize="none" keyboardType="url" />
+              <TextField label="Address" value={url} onChangeText={setUrl} placeholder="https://your-project.vercel.app" autoCapitalize="none" keyboardType="url" />
               <TextField label="Key" value={key} onChangeText={setKey} placeholder="The APP_KEY you set" autoCapitalize="none" secureTextEntry error={error ?? undefined} />
               <Button label="Save" size="lg" fullWidth onPress={saveApi} />
             </Card>
