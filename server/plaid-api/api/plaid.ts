@@ -58,6 +58,23 @@ export default async function handler(req: Req, res: Res) {
   res.setHeader('cache-control', 'no-store');
 
   if (req.method === 'OPTIONS') return res.status(204).end();
+
+  // A GET says whether this deployment is set up, and which Plaid it would
+  // talk to. Names and yes/no only — no value here is a secret, and it saves
+  // guessing from the other side of a 502.
+  if (req.method === 'GET') {
+    return res.status(200).json({
+      ok: secretsPresent(env),
+      env: (env.PLAID_ENV ?? '(unset)').trim().toLowerCase(),
+      has: {
+        clientId: !!env.PLAID_CLIENT_ID,
+        secret: !!env.PLAID_SECRET,
+        appKey: !!env.APP_KEY,
+      },
+      origins: allowed,
+      node: process.version,
+    });
+  }
   // An origin this deployment doesn't know never gets an answer, key or no key.
   if (origin && !allowed.includes(origin)) return res.status(403).json({ error: 'origin_not_allowed' });
   if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
