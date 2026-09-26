@@ -34,6 +34,7 @@ export default function Root({ children }: { children: ReactNode }) {
         <meta name="robots" content="noindex, nofollow" />
 
         <ScrollViewStyleReset />
+        <script dangerouslySetInnerHTML={{ __html: THEME }} />
         <script dangerouslySetInnerHTML={{ __html: SERVICE_WORKER }} />
         <style dangerouslySetInnerHTML={{ __html: themeCss() }} />
         <style dangerouslySetInnerHTML={{ __html: BODY }} />
@@ -42,6 +43,21 @@ export default function Root({ children }: { children: ReactNode }) {
     </html>
   );
 }
+
+/**
+ * The saved palette, before a single pixel is drawn.
+ *
+ * Without this the page starts with no `data-theme`, so a phone set to dark
+ * gets the dark palette from the media query, and the app flips to light a
+ * second later once the ledger has loaded. One attribute, set here, and the
+ * first frame is already right.
+ */
+const THEME = `
+  try {
+    var choice = window.localStorage.getItem('masterfinance:theme');
+    if (choice === 'light' || choice === 'dark') document.documentElement.setAttribute('data-theme', choice);
+  } catch (e) {}
+`;
 
 const SERVICE_WORKER = `
   // Dev servers rebuild constantly; a cache there only serves stale pages.

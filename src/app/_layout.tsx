@@ -9,7 +9,7 @@ import { Splash } from '@/components/ui/Splash';
 import { LockGate } from '@/lib/lock';
 import { useReminderSync } from '@/lib/notifications';
 import { hydrateLedger, useLedgerStore } from '@/store/ledger';
-import { applyTheme } from '@/theme/applyTheme';
+import { applyTheme, revealApp } from '@/theme/applyTheme';
 import { LIGHT } from '@/theme/palette';
 import { motion } from '@/theme/motion';
 import { colors } from '@/theme/tokens';
@@ -42,8 +42,15 @@ export default function RootLayout() {
   }, []);
 
   // The chosen palette is part of the data, so it follows a restore or import.
+  // Applied the moment the ledger is in — while the opening screen is still
+  // covering the app — so a correction is never something you can watch happen.
   useEffect(() => {
-    if (!opening) applyTheme(theme ?? 'system');
+    if (hydrated) applyTheme(theme ?? 'system');
+  }, [hydrated, theme]);
+
+  // The page's own chrome follows the opening screen out.
+  useEffect(() => {
+    if (!opening) revealApp(theme ?? 'system');
   }, [opening, theme]);
 
   return (
