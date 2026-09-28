@@ -221,8 +221,8 @@ describe('a tour happens in an order', () => {
 
   it('asks the money at the desk and tries the taps in the unit', () => {
     const desk = stageQuestions('desk').core.map((q) => q.id);
-    expect(desk).toContain('total_move_in');
-    expect(desk).toContain('move_in_specials');
+    expect(desk).toContain('rent_is_special');
+    expect(desk).toContain('deposit_refundable');
     const unit = stageQuestions('unit').core;
     expect(unit.map((q) => q.id)).toContain('water_pressure');
     // Standing in the kitchen is not the moment to ask about the deposit.
@@ -231,19 +231,27 @@ describe('a tour happens in an order', () => {
     expect(unit.filter((q) => q.ask === 'you').length).toBeGreaterThan(unit.filter((q) => q.ask === 'them').length);
   });
 
+  it('never asks for a number the costs form already holds', () => {
+    // Being asked on the tour for what you typed in the car park is how you end
+    // up with two answers and trust in neither.
+    const gone = ['available_date', 'total_move_in', 'fees_total', 'move_in_specials', 'utilities_average', 'income_requirement', 'lease_lengths', 'pet_cost'];
+    const ids = TOUR_QUESTIONS.map((q) => q.id);
+    for (const id of gone) expect(ids).not.toContain(id);
+  });
+
   it('separates what to ask them from what to check yourself', () => {
     const fresh = stillToDo(place());
     expect(fresh.ask.length + fresh.check.length).toBe(coreQuestions().length);
     expect(fresh.check.length).toBeGreaterThan(0);
     // Answering one takes it off the list it was on.
-    const asked = place({ answers: [{ id: 'total_move_in', note: '$1,800 all in' }] });
-    expect(stillToDo(asked).ask.map((q) => q.id)).not.toContain('total_move_in');
+    const asked = place({ answers: [{ id: 'rent_is_special', note: 'Standard, no special' }] });
+    expect(stillToDo(asked).ask.map((q) => q.id)).not.toContain('rent_is_special');
     expect(stillToDo(asked).ask.length).toBe(fresh.ask.length - 1);
   });
 
   it('counts progress against the short list, and extras separately', () => {
     // 'late_fee' is a real question, just not one of the essentials.
-    const answered = place({ answers: [{ id: 'total_move_in', note: '$1,800' }, { id: 'late_fee', note: '5 days' }] });
+    const answered = place({ answers: [{ id: 'rent_is_special', note: 'Standard' }, { id: 'late_fee', note: '5 days' }] });
     const progress = checklistProgress(answered);
     expect(progress.answered).toBe(1);
     expect(progress.total).toBe(coreQuestions().length);

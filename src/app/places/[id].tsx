@@ -367,6 +367,22 @@ export default function PlaceScreen() {
           value={stage}
           onChange={setStage}
         />
+        {stage === "desk" && (
+          // The numbers are typed once, on the costs screen, and nothing here
+          // asks for one again. This is the way back to them.
+          <Button
+            label="Edit the rent, fees and offer"
+            icon="sliders"
+            variant="secondary"
+            fullWidth
+            onPress={() =>
+              router.push({
+                pathname: "/places/edit",
+                params: { id: place.id },
+              })
+            }
+          />
+        )}
         <Card style={{ gap: spacing.lg }}>
           {here.core.map((q) => (
             <QuestionRow

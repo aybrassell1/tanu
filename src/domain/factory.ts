@@ -1,7 +1,7 @@
 import { buildDefaultCategories } from './defaultCategories';
 import type { DashboardWidgetId, ID, LedgerData, Settings, TaxProfile } from './types';
 
-export const SCHEMA_VERSION = 6;
+export const SCHEMA_VERSION = 7;
 
 let counter = 0;
 

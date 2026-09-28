@@ -112,3 +112,36 @@ describe('a backup keeps everything it was given', () => {
     expect(parseBackup(serializeBackup(full())).warnings.some((w) => w.toLowerCase().includes('error'))).toBe(false);
   });
 });
+
+describe('questions the costs form took over', () => {
+  const older = (): LedgerData => {
+    const data = full();
+    data.meta = { ...data.meta, schemaVersion: 6 };
+    data.places = [
+      {
+        ...place,
+        notes: 'Third floor, quiet side',
+        answers: [
+          { id: 'total_move_in', note: '$1,800 all in' },
+          { id: 'available_date', note: 'Nov 1st' },
+          { id: 'laundry', answer: 'yes' },
+        ],
+      },
+    ];
+    return data;
+  };
+
+  it('keeps what you wrote, where you will still see it', () => {
+    // A note taken standing in a leasing office is not ours to bin because the
+    // form grew a field for it.
+    const back = parseBackup(serializeBackup(older())).data.places[0];
+    expect(back.notes).toContain('Third floor, quiet side');
+    expect(back.notes).toContain('Total to move in: $1,800 all in');
+    expect(back.notes).toContain('When it is available: Nov 1st');
+  });
+
+  it('drops the answers themselves, so nothing counts twice', () => {
+    const back = parseBackup(serializeBackup(older())).data.places[0];
+    expect(back.answers.map((a) => a.id)).toEqual(['laundry']);
+  });
+});
