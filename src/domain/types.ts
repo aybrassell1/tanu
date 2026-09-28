@@ -780,6 +780,26 @@ export interface PlaceFee {
   note?: string;
 }
 
+/**
+ * Free months and money off, which is how the rent people advertise stops
+ * being the rent people pay.
+ *
+ * The same offer means two different things depending on how it lands. Spread
+ * across the lease it lowers every month — the "net effective" rent, and the
+ * number a listing usually shouts. Taken up front you pay nothing at all for a
+ * month or two and then the full rent, which is a different problem: cheap now,
+ * and your actual monthly cost later is unchanged.
+ */
+export interface PlaceConcession {
+  /** Months of rent you don't pay. Halves are normal: 1.5 months free. */
+  freeMonths: number;
+  /** `spread` lowers every month; `upfront` makes the first months free. */
+  applied: 'spread' | 'upfront';
+  /** Anything else knocked off at signing, like $500 off move-in. */
+  upfrontCredit?: Cents;
+  note?: string;
+}
+
 /** A 1–5 impression of something no number can capture, like the light. */
 export interface PlaceRating {
   id: string;
@@ -804,6 +824,8 @@ export interface Place {
   included: string[];
   /** Whether the first month's rent is also due at signing. */
   firstMonthUpfront: boolean;
+  /** Free months or money off, and how it is applied. */
+  concession?: PlaceConcession;
 
   // The lease itself
   leaseMonths?: number;

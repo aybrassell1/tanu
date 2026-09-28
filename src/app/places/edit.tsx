@@ -4,7 +4,8 @@ import { useState } from 'react';
 import { FeeEditor } from '@/components/places/FeeEditor';
 import { Banner, Button, ChipSelect, DateField, MoneyField, NavHeader, NumberField, Screen, Section, Stack, SwitchRow, TextField, useOverlay } from '@/components/ui';
 import { UTILITIES, newPlace, placeCost } from '@/domain/places';
-import type { Place, PlaceFee } from '@/domain/types';
+import { concessionEffect } from '@/domain/places';
+import type { Place, PlaceConcession, PlaceFee } from '@/domain/types';
 import { goBackOr } from '@/lib/navigation';
 import { useData, useMoney, useToday } from '@/store/hooks';
 import { ledger } from '@/store/ledger';
@@ -30,6 +31,10 @@ export default function PlaceEditScreen() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const set = <K extends keyof Draft>(key: K, value: Draft[K]) => setDraft((d) => ({ ...d, [key]: value }));
   const setFees = (fees: PlaceFee[]) => set('fees', fees);
+  const offer = draft.concession;
+  const setOffer = (patch: Partial<PlaceConcession>) =>
+    set('concession', { freeMonths: offer?.freeMonths ?? 0, applied: offer?.applied ?? 'spread', ...offer, ...patch });
+  const effect = concessionEffect({ ...draft, id: 'draft', createdAt: '', updatedAt: '' } as Place);
 
   const cost = placeCost({ ...draft, id: 'draft', createdAt: '', updatedAt: '' } as Place);
 
@@ -67,6 +72,43 @@ export default function PlaceEditScreen() {
 
       <Section title="Every month, on top of rent">
         <FeeEditor when="monthly" fees={draft.fees} onChange={setFees} emptyHint="Tap a fee to add it, or add your own. Utilities count toward the 30% rule; the rest are just costs." />
+      </Section>
+
+      <Section title="Any deal on?" subtitle="Free months change the rent by hundreds, depending how they are applied">
+        <Stack>
+          <NumberField
+            label="Months free"
+            value={offer?.freeMonths || undefined}
+            onChange={(v) => setOffer({ freeMonths: v ?? 0 })}
+            hint="Halves are normal. Two months free on a 14-month lease is common."
+            optional
+          />
+          {(offer?.freeMonths ?? 0) > 0 && (
+            <ChipSelect
+              label="How is it applied?"
+              options={[
+                { value: 'spread', label: 'Spread over the lease' },
+                { value: 'upfront', label: 'First months free' },
+              ]}
+              value={offer?.applied ?? 'spread'}
+              onChange={(v) => setOffer({ applied: v as PlaceConcession['applied'] })}
+              hint="Ask them which. Spread lowers every month; up front means full rent once it ends."
+            />
+          )}
+          <MoneyField label="Money off at signing" value={offer?.upfrontCredit || undefined} onChange={(v) => setOffer({ upfrontCredit: v ?? 0 })} optional />
+        </Stack>
+        {effect && (
+          <Banner
+            tone="positive"
+            icon="tag"
+            title={`Worth ${money(effect.worth)} over ${effect.leaseMonths} months`}
+            message={
+              effect.freeAtStart > 0
+                ? `${effect.freeAtStart} ${effect.freeAtStart === 1 ? 'month' : 'months'} at no rent, then ${money(effect.askingRent)} every month. Budget for the full rent — the free part ends.`
+                : `${money(effect.payMonth)} a month instead of ${money(effect.askingRent)}. At renewal it goes back up by ${money(effect.renewalJump)}.`
+            }
+          />
+        )}
       </Section>
 
       <Section title="Due at signing">

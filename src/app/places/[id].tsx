@@ -100,6 +100,19 @@ export default function PlaceScreen() {
 
       <StatusPicker value={place.status} onChange={(status) => ledger.setPlaceStatus(place.id, status)} />
 
+      {scored.cost.concession && (
+        <Banner
+          tone="positive"
+          icon="tag"
+          title={`${money(scored.cost.concession.worth)} off, over ${scored.cost.concession.leaseMonths} months`}
+          message={
+            scored.cost.concession.freeAtStart > 0
+              ? `${scored.cost.concession.freeAtStart} ${scored.cost.concession.freeAtStart === 1 ? 'month' : 'months'} free at the start, then ${money(scored.cost.concession.askingRent)} a month. The figures below are what you pay once it ends.`
+              : `Asking rent is ${money(scored.cost.concession.askingRent)}; spread over the lease you pay ${money(scored.cost.concession.payMonth)}. Renewing costs ${money(scored.cost.concession.renewalJump)} a month more.`
+          }
+        />
+      )}
+
       <Section title="What it costs" subtitle="Everything, not just the rent">
         <Card>
           {scored.cost.breakdown.map((b) => (

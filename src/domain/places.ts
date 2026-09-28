@@ -12,7 +12,7 @@
  */
 
 import { rentAffordability, type AffordabilityResult, type FinancialSnapshot } from './affordability';
-import type { Cents, CustomTourQuestion, FeeWhen, Place, PlaceFee, PlaceStatus } from './types';
+import type { Cents, CustomTourQuestion, FeeWhen, Place, PlaceConcession, PlaceFee, PlaceStatus } from './types';
 
 // ─── What to ask on the tour ─────────────────────────────────────────────────
 
@@ -43,7 +43,8 @@ export const TOUR_QUESTIONS: TourQuestion[] = [
   { id: 'utilities_average', group: 'Money', label: 'What do utilities average here in summer and winter?', kind: 'note', hint: 'Ask for both. A cheap place with electric heat may not be.', scored: false },
   { id: 'fees_total', group: 'Money', label: 'Are there any monthly fees beyond rent?', kind: 'note', hint: 'Amenity, trash, valet, pest, common area, package locker.', scored: false },
   { id: 'deposit_refundable', group: 'Money', label: 'Is the deposit refundable, and what gets taken out?', kind: 'yesno', hint: 'Ask what they kept from the last tenant.', scored: true },
-  { id: 'move_in_specials', group: 'Money', label: 'Any move-in specials or free months?', kind: 'note', hint: 'Check whether it is spread across the lease or paid back if you leave.', scored: false },
+  { id: 'move_in_specials', group: 'Money', label: 'Any free months, and is it spread or taken at the start?', kind: 'note', hint: 'Spread lowers every month; taken at the start, the rent returns to full. Record it in the costs so the maths is right.', scored: false },
+  { id: 'concession_clawback', group: 'Money', label: 'If I leave early, do I pay the free months back?', kind: 'note', hint: 'Usually yes. That turns a cheap lease into an expensive exit.', scored: false },
   { id: 'income_requirement', group: 'Money', label: 'What income do you require?', kind: 'note', hint: 'Usually 2.5–3× the monthly rent, gross.', scored: false },
   { id: 'total_move_in', group: 'Money', label: 'What is the total to move in, all in?', kind: 'note', hint: 'Make them add it up out loud: deposit, admin, application, pet, first month.', scored: false },
   { id: 'credit_minimum', group: 'Money', label: 'What credit score do you need?', kind: 'note', hint: 'Worth knowing before you pay to apply.', scored: false },
@@ -61,6 +62,10 @@ export const TOUR_QUESTIONS: TourQuestion[] = [
   { id: 'break_lease', group: 'The lease', label: 'What does breaking the lease cost?', kind: 'note', hint: 'Two months plus forfeited deposit is common. Get the number.', scored: false },
   { id: 'sublet', group: 'The lease', label: 'Can you sublet or reassign the lease?', kind: 'yesno', scored: false },
   { id: 'renewal_notice', group: 'The lease', label: 'How much notice to renew or leave?', kind: 'note', hint: '60 days is typical; missing it can trigger month-to-month rates.', scored: false },
+  { id: 'add_roommate', group: 'The lease', label: 'Can someone move in later, and what does adding them cost?', kind: 'note', scored: false },
+  { id: 'guest_policy', group: 'The lease', label: 'How long can a guest stay before it becomes a problem?', kind: 'note', scored: false },
+  { id: 'decorating', group: 'The lease', label: 'Can I paint or hang things, and what gets charged at move-out?', kind: 'note', hint: 'Nail holes are the classic deduction.', scored: false },
+  { id: 'smoking', group: 'The lease', label: 'What is the smoking policy, indoors and on balconies?', kind: 'note', scored: false },
   { id: 'guarantor', group: 'The lease', label: 'Do they accept a guarantor or co-signer?', kind: 'yesno', scored: false },
   { id: 'lease_price_by_length', group: 'The lease', label: 'What does a longer lease cost, versus a shorter one?', kind: 'note', hint: 'A 15-month lease is often cheaper per month than a 12.', scored: false },
   { id: 'month_to_month', group: 'The lease', label: 'What is the month-to-month rate when the lease ends?', kind: 'note', hint: 'Often several hundred more a month. This is what you pay if the next place falls through.', scored: false },
@@ -73,6 +78,9 @@ export const TOUR_QUESTIONS: TourQuestion[] = [
   { id: 'dishwasher', group: 'The unit', label: 'Dishwasher?', kind: 'yesno', scored: true },
   { id: 'ac_heat', group: 'The unit', label: 'What kind of heating and cooling?', kind: 'note', hint: 'Central, window units, radiators, heat pump — it shows up on the bill.', scored: false },
   { id: 'water_pressure', group: 'The unit', label: 'Did you run the taps and the shower?', kind: 'yesno', hint: 'Do it. Also flush while the shower runs.', scored: true },
+  { id: 'hot_water', group: 'The unit', label: 'Does the hot water arrive quickly, and run clear?', kind: 'yesno', hint: 'Let it run a minute. Slow or rusty is the water heater telling you something.', scored: true },
+  { id: 'locks', group: 'The unit', label: 'Do all the doors and windows lock?', kind: 'yesno', hint: 'Try them, including the ones behind furniture.', scored: true },
+  { id: 'damp_check', group: 'The unit', label: 'Did you look under the sinks and around the windows?', kind: 'yesno', hint: 'Stains, warping and a damp smell are what you are looking for.', scored: true },
   { id: 'outlets', group: 'The unit', label: 'Enough outlets, and do they work?', kind: 'yesno', scored: true },
   { id: 'windows', group: 'The unit', label: 'Which way do the windows face, and do they open?', kind: 'note', scored: false },
   { id: 'storage', group: 'The unit', label: 'Closet and storage space enough?', kind: 'yesno', scored: true },
@@ -92,6 +100,10 @@ export const TOUR_QUESTIONS: TourQuestion[] = [
   { id: 'pests', group: 'The building', label: 'Any pest treatment history in the building?', kind: 'yesno', hint: 'A "no" that comes too fast is worth a second question.', scored: false },
   { id: 'security', group: 'The building', label: 'Secure entry, cameras, lighting at night?', kind: 'yesno', scored: true },
   { id: 'turnover', group: 'The building', label: 'How long do people usually stay?', kind: 'note', hint: 'High turnover tells you something the tour will not.', scored: false },
+  { id: 'last_tenant', group: 'The building', label: 'Why did the last tenant leave, and how long has it been empty?', kind: 'note', scored: false },
+  { id: 'complaints', group: 'The building', label: 'How do I report a problem with a neighbour?', kind: 'note', hint: 'Whether anyone actually handles it is the real question.', scored: false },
+  { id: 'bins', group: 'The building', label: 'Where do the bins go, and when are they collected?', kind: 'note', scored: false },
+  { id: 'seasonal', group: 'The building', label: 'Who does snow, leaves and the grounds?', kind: 'note', scored: false },
   { id: 'who_manages', group: 'The building', label: 'Who manages it, and are they on site?', kind: 'note', scored: false },
   { id: 'repairs_charged', group: 'The building', label: 'What repairs get charged back to me?', kind: 'note', hint: 'Clogged drains, lockouts and lost fobs are often billable.', scored: false },
   { id: 'upcoming_work', group: 'The building', label: 'Any construction or renovation planned?', kind: 'note', hint: 'Scaffolding outside your window for six months is a real cost.', scored: false },
@@ -112,6 +124,8 @@ export const TOUR_QUESTIONS: TourQuestion[] = [
   { id: 'truck_access', group: 'Before you sign', label: 'Where does a moving truck park?', kind: 'note', scored: false },
   { id: 'everything_in_writing', group: 'Before you sign', label: 'Will every fee and concession be written into the lease?', kind: 'yesno', hint: 'A verbal "we will waive that" is worth nothing at renewal.', scored: true },
   { id: 'read_lease', group: 'Before you sign', label: 'Can I take a copy of the lease away to read?', kind: 'yesno', scored: true },
+  { id: 'second_visit', group: 'Before you sign', label: 'Have you seen it at a different time of day?', kind: 'yesno', hint: 'Evening light and evening noise are different things entirely.', scored: true },
+  { id: 'neighbourhood', group: 'Before you sign', label: 'What is within walking distance?', kind: 'note', hint: 'Shop, pharmacy, transport. Walk it, do not map it.', scored: false },
 ];
 
 /** What you would pay separately if the rent doesn't cover it. */
@@ -145,6 +159,23 @@ export const PLACE_STATUS: Record<PlaceStatus, { label: string; tone: 'muted' | 
 
 // ─── What it costs ───────────────────────────────────────────────────────────
 
+/** What a concession is actually worth, once it is spread over a real lease. */
+export interface ConcessionEffect {
+  /** The rent they advertise, before anything is taken off. */
+  askingRent: Cents;
+  /** The rent in a month you actually pay one. */
+  payMonth: Cents;
+  /** Rent averaged over the whole lease — the "net effective" figure. */
+  effectiveRent: Cents;
+  /** Total value of the offer: free rent plus anything knocked off at signing. */
+  worth: Cents;
+  /** Months at the start you pay no rent for. Zero when the offer is spread. */
+  freeAtStart: number;
+  /** What the rent becomes when the offer ends, minus what you pay now. */
+  renewalJump: Cents;
+  leaseMonths: number;
+}
+
 export interface PlaceCost {
   /** Everything that arrives every month, including the rent. */
   monthly: Cents;
@@ -158,30 +189,76 @@ export interface PlaceCost {
   upfrontBreakdown: { key: string; label: string; amount: Cents }[];
   /** Rent plus everything else, over a 12-month lease. */
   firstYear: Cents;
+  /** Present when the place is offering free months or money off. */
+  concession?: ConcessionEffect;
+}
+
+/** A lease with no length given is assumed to be the usual twelve months. */
+export const DEFAULT_LEASE_MONTHS = 12;
+
+/**
+ * What free months are worth, and what you actually hand over each month.
+ *
+ * Spread over the lease, the offer lowers every payment and the rent jumps back
+ * up at renewal. Taken up front, the first months cost nothing and every month
+ * after is the full rent — the saving is the same, but what you have to afford
+ * month to month is not.
+ */
+export function concessionEffect(place: Place): ConcessionEffect | undefined {
+  const offer = place.concession;
+  if (!offer || (offer.freeMonths <= 0 && !offer.upfrontCredit)) return undefined;
+
+  const leaseMonths = Math.max(1, place.leaseMonths ?? DEFAULT_LEASE_MONTHS);
+  // More free months than there are months in the lease is someone mishearing.
+  const freeMonths = Math.min(Math.max(0, offer.freeMonths), leaseMonths);
+  const freeRent = Math.round(place.rent * freeMonths);
+  const worth = freeRent + (offer.upfrontCredit ?? 0);
+  const effectiveRent = Math.round((place.rent * (leaseMonths - freeMonths)) / leaseMonths);
+  const spread = offer.applied === 'spread';
+
+  return {
+    askingRent: place.rent,
+    payMonth: spread ? effectiveRent : place.rent,
+    effectiveRent,
+    worth,
+    freeAtStart: spread ? 0 : Math.floor(freeMonths),
+    // Only a spread offer has somewhere to fall from: paying full rent already
+    // means renewal changes nothing by itself.
+    renewalJump: spread ? place.rent - effectiveRent : 0,
+    leaseMonths,
+  };
 }
 
 export function placeCost(place: Place): PlaceCost {
   const fees = place.fees ?? [];
+  const concession = concessionEffect(place);
+  // The headline is what you hand over in a month you pay rent, because that is
+  // the number your income has to carry.
+  const rent = concession?.payMonth ?? place.rent;
   const breakdown = [
-    { key: 'rent', label: 'Rent', amount: place.rent },
+    { key: 'rent', label: concession && rent !== place.rent ? 'Rent, after the offer' : 'Rent', amount: rent },
     ...fees.filter((f) => f.when === 'monthly').map((f) => ({ key: f.id, label: f.label, amount: f.amount })),
   ];
   const upfrontBreakdown = [
-    ...(place.firstMonthUpfront ? [{ key: 'first', label: "First month's rent", amount: place.rent }] : []),
+    // A free first month is not due at signing, however the offer is applied.
+    ...(place.firstMonthUpfront && !(concession && concession.freeAtStart > 0) ? [{ key: 'first', label: "First month's rent", amount: rent }] : []),
     ...fees.filter((f) => f.when === 'upfront').map((f) => ({ key: f.id, label: f.label, amount: f.amount })),
   ];
   const monthly = sum(breakdown);
-  const upfront = sum(upfrontBreakdown);
+  const credit = concession?.worth && place.concession?.upfrontCredit ? place.concession.upfrontCredit : 0;
+  const upfront = Math.max(0, sum(upfrontBreakdown) - credit);
   return {
     monthly,
-    aboveRent: monthly - place.rent,
+    aboveRent: monthly - rent,
     upfront,
     utilities: sum(fees.filter((f) => f.when === 'monthly' && f.utility)),
     breakdown: breakdown.filter((b) => b.amount > 0),
     upfrontBreakdown: upfrontBreakdown.filter((b) => b.amount > 0),
     // Twelve months plus what you hand over at signing, less the first month if
-    // it was in there, because that month is already one of the twelve.
-    firstYear: monthly * 12 + upfront - (place.firstMonthUpfront ? place.rent : 0),
+    // it was in there, because that month is already one of the twelve. Free
+    // months at the start come off the twelve.
+    firstYear: monthly * 12 - rent * Math.min(concession?.freeAtStart ?? 0, 12) + upfront - (place.firstMonthUpfront && !(concession && concession.freeAtStart > 0) ? rent : 0),
+    concession,
   };
 }
 
