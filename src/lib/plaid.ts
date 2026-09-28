@@ -28,7 +28,7 @@ export class PlaidError extends Error {
 }
 
 /** Anything this app asks the pass-through to do. */
-type Action = 'link_token' | 'exchange' | 'sync' | 'accounts' | 'institution' | 'remove';
+type Action = 'link_token' | 'exchange' | 'sync' | 'refresh' | 'accounts' | 'institution' | 'remove';
 
 async function call<T>(api: BankApi, action: Action, body: Record<string, unknown> = {}): Promise<T> {
   const endpoint = `${api.url.replace(/\/+$/, '')}/api/plaid`;
@@ -108,6 +108,27 @@ export interface PlaidAccount {
 
 export async function accounts(api: BankApi, accessToken: string): Promise<{ accounts: PlaidAccount[]; item: { institution_id?: string | null } }> {
   return call<{ accounts: PlaidAccount[]; item: { institution_id?: string | null } }>(api, 'accounts', { access_token: accessToken });
+}
+
+/**
+ * Asks Plaid to go and fetch from the bank now.
+ *
+ * `/transactions/sync` only reads what Plaid already holds, and Plaid pulls from
+ * a bank on its own schedule — a few times a day. Without this, a charge made an
+ * hour ago is not missing, it simply has not been collected yet, and syncing
+ * again reads the same empty answer.
+ *
+ * The fetch itself happens after this returns, so a sync straight afterwards may
+ * still be a moment early. Not every plan allows it, so a refusal is not an
+ * error worth showing.
+ */
+export async function refresh(api: BankApi, accessToken: string): Promise<boolean> {
+  try {
+    await call(api, 'refresh', { access_token: accessToken });
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export async function institutionName(api: BankApi, institutionId: string): Promise<string | undefined> {

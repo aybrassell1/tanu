@@ -28,6 +28,8 @@ export interface AutoSyncOutcome {
   waiting: number;
   /** Card payments with no connected account to have come from. */
   needsPair: number;
+  /** Charges the bank has not settled yet, held back until it does. */
+  pending: number;
   error?: string;
 }
 
@@ -61,7 +63,7 @@ export async function runAutoSync(data: LedgerData, now = Date.now()): Promise<A
       const drafts = plan.rows.filter((r) => r.draft);
 
       if (!autoAdd) {
-        outcomes.push({ connection, added: 0, waiting: drafts.length, needsPair: plan.counts.needs_pair });
+        outcomes.push({ connection, added: 0, waiting: drafts.length, needsPair: plan.counts.needs_pair, pending: plan.counts.pending });
         continue;
       }
 
@@ -71,7 +73,7 @@ export async function runAutoSync(data: LedgerData, now = Date.now()): Promise<A
         removeIds: plan.removed,
         cursor: payload.next_cursor,
       });
-      outcomes.push({ connection, added: result.ok ? result.id.added : 0, waiting: 0, needsPair: plan.counts.needs_pair });
+      outcomes.push({ connection, added: result.ok ? result.id.added : 0, waiting: 0, needsPair: plan.counts.needs_pair, pending: plan.counts.pending });
     } catch (e) {
       const message = e instanceof PlaidError ? e.message : 'Could not reach your bank.';
       // Only a broken login is worth interrupting you about; everything else
@@ -79,7 +81,7 @@ export async function runAutoSync(data: LedgerData, now = Date.now()): Promise<A
       if (e instanceof PlaidError && e.code === 'ITEM_LOGIN_REQUIRED') {
         ledger.flagConnection(connection.id, 'Your bank ended the connection. Reconnect to keep syncing.');
       }
-      outcomes.push({ connection, added: 0, waiting: 0, needsPair: 0, error: message });
+      outcomes.push({ connection, added: 0, waiting: 0, needsPair: 0, pending: 0, error: message });
     }
   }
   return outcomes;
@@ -136,12 +138,16 @@ export function summarize(outcomes: AutoSyncOutcome[]): string | null {
   const added = outcomes.reduce((n, o) => n + o.added, 0);
   const waiting = outcomes.reduce((n, o) => n + o.waiting, 0);
   const needsPair = outcomes.reduce((n, o) => n + o.needsPair, 0);
+  const pending = outcomes.reduce((n, o) => n + o.pending, 0);
   const broken = outcomes.filter((o) => o.error);
   // Something held back is worth a word even when everything else went in.
   const held = needsPair > 0 ? `, ${needsPair} card ${needsPair === 1 ? 'payment needs' : 'payments need'} the other account` : '';
   if (added > 0) return `${added === 1 ? 'Added 1 new transaction' : `Added ${added} new transactions`}${held}`;
   if (waiting > 0) return `${waiting === 1 ? '1 transaction is waiting for you' : `${waiting} transactions are waiting for you`}${held}`;
   if (needsPair > 0) return `${needsPair} card ${needsPair === 1 ? 'payment needs' : 'payments need'} the account it came from`;
+  // Seen, but not settled. Saying nothing here is how a charge you know you made
+  // looks like a sync that quietly failed.
+  if (pending > 0) return pending === 1 ? '1 charge is pending at your bank' : `${pending} charges are pending at your bank`;
   if (broken.length === outcomes.length && broken.length > 0) return broken[0].error ?? null;
   return null;
 }

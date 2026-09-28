@@ -41,6 +41,7 @@ const ACTIONS: Record<string, { path: string; fields: string[] }> = {
   exchange: { path: '/item/public_token/exchange', fields: ['public_token'] },
   sync: { path: '/transactions/sync', fields: ['access_token', 'cursor', 'count', 'options'] },
   accounts: { path: '/accounts/get', fields: ['access_token'] },
+  refresh: { path: '/transactions/refresh', fields: ['access_token'] },
   institution: { path: '/institutions/get_by_id', fields: ['institution_id', 'country_codes'] },
   remove: { path: '/item/remove', fields: ['access_token'] },
 };

@@ -6,7 +6,7 @@ import { Banner, Button, Card, EmptyState, ListRow, Money, NavHeader, Pill, Row,
 import { formatDate } from '@/domain/dates';
 import { isSandbox, planSync, type SyncResult, type SyncRow } from '@/domain/plaidSync';
 import { bankBalanceOf } from '@/domain/balanceCheck';
-import { accounts as fetchAccounts, PlaidError, syncAll, type BankApi } from '@/lib/plaid';
+import { accounts as fetchAccounts, PlaidError, refresh, syncAll, type BankApi } from '@/lib/plaid';
 import { useData, useToday } from '@/store/hooks';
 import { ledger } from '@/store/ledger';
 import { colors, spacing } from '@/theme/tokens';
@@ -19,6 +19,9 @@ import { colors, spacing } from '@/theme/tokens';
  * ledger changes when you say so and not before, and the whole thing is one
  * undo afterwards.
  */
+/** How long Plaid needs to collect after it says it will. */
+const REFRESH_WAIT_MS = 2500;
+
 export default function SyncScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
@@ -40,6 +43,9 @@ export default function SyncScreen() {
     setState('loading');
     setError(null);
     try {
+      // Tapping sync means "go and look", so ask the bank before reading the
+      // answer. Plaid collects after it replies, hence the pause.
+      if (await refresh(api, connection.accessToken)) await new Promise((r) => setTimeout(r, REFRESH_WAIT_MS));
       const payload = await syncAll(api, connection.accessToken, connection.cursor);
       // What each account holds, noted beside it. Nothing is adjusted here.
       try {
@@ -126,7 +132,14 @@ export default function SyncScreen() {
       )}
 
       {nothingToDo && (
-        <EmptyState icon="check-circle" title="Nothing new" message="Your bank has nothing since the last sync." actionLabel="Back to banks" actionIcon="arrow-left" onAction={() => router.push('/connect')} />
+        <EmptyState
+          icon="check-circle"
+          title="Nothing new"
+          message="Your bank has nothing since the last sync. A card charge usually takes a day or two to reach here, and a pending one is held until it settles."
+          actionLabel="Back to banks"
+          actionIcon="arrow-left"
+          onAction={() => router.push('/connect')}
+        />
       )}
 
       {state === 'ready' && !nothingToDo && plan && (

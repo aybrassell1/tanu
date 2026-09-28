@@ -168,3 +168,31 @@ describe('catching up on open', () => {
     expect(outcomes[1].error).toBeUndefined();
   });
 });
+
+describe('saying what happened', () => {
+  const outcome = (over: Partial<import('../../lib/autoSync').AutoSyncOutcome> = {}) => ({
+    connection: connection({ id: 'conn_s' }),
+    added: 0,
+    waiting: 0,
+    needsPair: 0,
+    pending: 0,
+    ...over,
+  });
+
+  it('mentions a charge the bank has not settled', async () => {
+    // Otherwise a charge you know you made reads as a sync that did nothing.
+    const { summarize } = await import('../../lib/autoSync');
+    expect(summarize([outcome({ pending: 1 })])).toBe('1 charge is pending at your bank');
+    expect(summarize([outcome({ pending: 3 })])).toBe('3 charges are pending at your bank');
+  });
+
+  it('leads with what actually went in', async () => {
+    const { summarize } = await import('../../lib/autoSync');
+    expect(summarize([outcome({ added: 2, pending: 1 })])).toBe('Added 2 new transactions');
+  });
+
+  it('says nothing when there is nothing to say', async () => {
+    const { summarize } = await import('../../lib/autoSync');
+    expect(summarize([outcome()])).toBeNull();
+  });
+});
