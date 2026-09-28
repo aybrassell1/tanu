@@ -3,7 +3,11 @@ import { describe, expect, it } from 'vitest';
 import type { FinancialSnapshot } from '../affordability';
 import {
   TOUR_QUESTIONS,
+  TOUR_STAGES,
   checklistProgress,
+  coreQuestions,
+  stageQuestions,
+  stillToDo,
   newPlace,
   placeCost,
   placeHighlights,
@@ -182,17 +186,74 @@ describe('grading a place', () => {
     expect(scored.cost.monthly).toBe(0);
     expect(scored.rated).toBe(0);
     expect(scored.answered).toBe(0);
-    expect(checklistProgress(place()).total).toBe(TOUR_QUESTIONS.length);
+    expect(checklistProgress(place()).total).toBe(coreQuestions().length);
     expect(rankPlaces(snapshot(), [])).toEqual([]);
     expect(placeHighlights([])).toEqual({ best: null, cheapest: null, spread: 0 });
   });
 
-  it('gives every question a unique id and a group', () => {
+  it('gives every question a unique id, a stage and someone to answer it', () => {
     const ids = new Set(TOUR_QUESTIONS.map((q) => q.id));
     expect(ids.size).toBe(TOUR_QUESTIONS.length);
-    expect(TOUR_QUESTIONS.every((q) => q.group && q.label)).toBe(true);
+    const stages = new Set(TOUR_STAGES.map((s) => s.id));
+    expect(TOUR_QUESTIONS.every((q) => q.label && stages.has(q.stage) && (q.ask === 'them' || q.ask === 'you'))).toBe(true);
     // A scored question has to be answerable yes or no.
     expect(TOUR_QUESTIONS.filter((q) => q.scored).every((q) => q.kind === 'yesno')).toBe(true);
+  });
+});
+
+describe('a tour happens in an order', () => {
+  it('keeps the short list short enough to actually ask', () => {
+    // The whole point: a leasing agent asked forty questions stops answering.
+    expect(coreQuestions().length).toBeLessThanOrEqual(24);
+    expect(coreQuestions().filter((q) => q.ask === 'them').length).toBeLessThanOrEqual(18);
+    // And it is still worth having the rest.
+    expect(TOUR_QUESTIONS.length).toBeGreaterThan(60);
+  });
+
+  it('puts something in every stage, short list and all', () => {
+    for (const stage of TOUR_STAGES) {
+      const here = stageQuestions(stage.id);
+      expect(here.core.length).toBeGreaterThan(0);
+      expect(here.more.length).toBeGreaterThan(0);
+      expect(here.core.every((q) => q.stage === stage.id)).toBe(true);
+    }
+  });
+
+  it('asks the money at the desk and tries the taps in the unit', () => {
+    const desk = stageQuestions('desk').core.map((q) => q.id);
+    expect(desk).toContain('total_move_in');
+    expect(desk).toContain('move_in_specials');
+    const unit = stageQuestions('unit').core;
+    expect(unit.map((q) => q.id)).toContain('water_pressure');
+    // Standing in the kitchen is not the moment to ask about the deposit.
+    expect(unit.map((q) => q.id)).not.toContain('deposit_refundable');
+    // Most of what is left in the unit is yours to try, not theirs to answer.
+    expect(unit.filter((q) => q.ask === 'you').length).toBeGreaterThan(unit.filter((q) => q.ask === 'them').length);
+  });
+
+  it('separates what to ask them from what to check yourself', () => {
+    const fresh = stillToDo(place());
+    expect(fresh.ask.length + fresh.check.length).toBe(coreQuestions().length);
+    expect(fresh.check.length).toBeGreaterThan(0);
+    // Answering one takes it off the list it was on.
+    const asked = place({ answers: [{ id: 'total_move_in', note: '$1,800 all in' }] });
+    expect(stillToDo(asked).ask.map((q) => q.id)).not.toContain('total_move_in');
+    expect(stillToDo(asked).ask.length).toBe(fresh.ask.length - 1);
+  });
+
+  it('counts progress against the short list, and extras separately', () => {
+    // 'late_fee' is a real question, just not one of the essentials.
+    const answered = place({ answers: [{ id: 'total_move_in', note: '$1,800' }, { id: 'late_fee', note: '5 days' }] });
+    const progress = checklistProgress(answered);
+    expect(progress.answered).toBe(1);
+    expect(progress.total).toBe(coreQuestions().length);
+    expect(progress.extra).toBe(1);
+  });
+
+  it('offers the short list first when it lists what is left', () => {
+    const left = unanswered(place());
+    expect(left.slice(0, coreQuestions().length).every((q) => q.core)).toBe(true);
+    expect(left).toHaveLength(TOUR_QUESTIONS.length);
   });
 });
 
@@ -202,11 +263,15 @@ describe('questions you add yourself', () => {
     { id: 'q2', label: 'Where do the bins live?', kind: 'note', createdAt: stamp },
   ];
 
-  it('joins them onto the checklist, in their own group', () => {
+  it('joins them onto the checklist, kept apart from the built-in ones', () => {
     const all = tourQuestions(mine);
     expect(all).toHaveLength(TOUR_QUESTIONS.length + 2);
-    expect(all.slice(-2).map((q) => q.group)).toEqual(['Your questions', 'Your questions']);
-    expect(checklistProgress(place(), mine).total).toBe(TOUR_QUESTIONS.length + 2);
+    expect(all.slice(-2).every((q) => q.mine)).toBe(true);
+    // You would not write a question down in order to skip it, so yours are
+    // always in the short list — and never buried inside a stage.
+    expect(all.slice(-2).every((q) => q.core)).toBe(true);
+    expect(checklistProgress(place(), mine).total).toBe(coreQuestions().length + 2);
+    expect(TOUR_STAGES.some((s) => stageQuestions(s.id, mine).core.some((q) => q.mine))).toBe(false);
   });
 
   it('counts a yes/no one toward the grade and a note one not at all', () => {

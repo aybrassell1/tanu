@@ -18,9 +18,31 @@ import type { Cents, CustomTourQuestion, FeeWhen, Place, PlaceConcession, PlaceF
 
 export type QuestionKind = 'yesno' | 'note';
 
+/**
+ * A tour happens in an order, so the checklist follows it: the money at the
+ * desk, the building on the way, the unit while you are standing in it, then the
+ * lease as you are leaving. Asking the water pressure question in the lobby is
+ * how you end up not asking it at all.
+ */
+export type TourStage = 'desk' | 'walk' | 'unit' | 'leave';
+
+export const TOUR_STAGES: { id: TourStage; label: string }[] = [
+  { id: 'desk', label: 'At the desk' },
+  { id: 'walk', label: 'Walking round' },
+  { id: 'unit', label: 'In the unit' },
+  { id: 'leave', label: 'Before you leave' },
+];
+
 export interface TourQuestion {
   id: string;
-  group: string;
+  /** Where in the tour it belongs. */
+  stage: TourStage;
+  /**
+   * Who answers. A leasing agent will happily answer fifteen questions and
+   * resent forty, so the ones only you can answer — by trying a tap or a lock —
+   * are kept apart and never counted against your patience.
+   */
+  ask: 'them' | 'you';
   label: string;
   kind: QuestionKind;
   /** Why it is worth asking, or what a good answer sounds like. */
@@ -30,102 +52,106 @@ export interface TourQuestion {
    * worth asking but shouldn't mark a place down.
    */
   scored?: boolean;
+  /**
+   * In the short list shown by default. Everything else is still there, one tap
+   * away — a thorough list you never open is worse than a short one you finish.
+   */
+  core?: boolean;
+  /** Added by the user rather than built in. */
+  mine?: boolean;
 }
 
 /**
- * The questions people wish they had asked. Money first, because those are the
- * ones that change what the place costs, then the things that decide whether
- * you can live there.
+ * The questions people wish they had asked, in the order a tour actually
+ * happens. Roughly twenty are marked `core`: that is a tour you can get through
+ * without the agent losing patience. The rest are for the place you are serious
+ * about.
  */
 export const TOUR_QUESTIONS: TourQuestion[] = [
-  // Money
-  { id: 'rent_increase', group: 'Money', label: 'How much did rent go up at renewal last year?', kind: 'note', hint: 'A number here tells you what year two costs.', scored: false },
-  { id: 'utilities_average', group: 'Money', label: 'What do utilities average here in summer and winter?', kind: 'note', hint: 'Ask for both. A cheap place with electric heat may not be.', scored: false },
-  { id: 'fees_total', group: 'Money', label: 'Are there any monthly fees beyond rent?', kind: 'note', hint: 'Amenity, trash, valet, pest, common area, package locker.', scored: false },
-  { id: 'deposit_refundable', group: 'Money', label: 'Is the deposit refundable, and what gets taken out?', kind: 'yesno', hint: 'Ask what they kept from the last tenant.', scored: true },
-  { id: 'move_in_specials', group: 'Money', label: 'Any free months, and is it spread or taken at the start?', kind: 'note', hint: 'Spread lowers every month; taken at the start, the rent returns to full. Record it in the costs so the maths is right.', scored: false },
-  { id: 'concession_clawback', group: 'Money', label: 'If I leave early, do I pay the free months back?', kind: 'note', hint: 'Usually yes. That turns a cheap lease into an expensive exit.', scored: false },
-  { id: 'income_requirement', group: 'Money', label: 'What income do you require?', kind: 'note', hint: 'Usually 2.5–3× the monthly rent, gross.', scored: false },
-  { id: 'total_move_in', group: 'Money', label: 'What is the total to move in, all in?', kind: 'note', hint: 'Make them add it up out loud: deposit, admin, application, pet, first month.', scored: false },
-  { id: 'credit_minimum', group: 'Money', label: 'What credit score do you need?', kind: 'note', hint: 'Worth knowing before you pay to apply.', scored: false },
-  { id: 'utility_billing', group: 'Money', label: 'Do I pay the utility company directly, or do you bill me?', kind: 'note', hint: 'A building that splits one bill across units (RUBS) can cost more than metered, and you cannot shop it.', scored: false },
-  { id: 'utility_admin_fee', group: 'Money', label: 'Is there a fee on top of the utility bill?', kind: 'yesno', hint: 'Billing or "utility admin" fees of $5–15 a month are common.', scored: false },
-  { id: 'rent_payment_fee', group: 'Money', label: 'Does it cost anything to pay rent?', kind: 'yesno', hint: 'Card fees of 2–3%, or a few dollars for ACH.', scored: false },
-  { id: 'late_fee', group: 'Money', label: 'What is the late fee, and is there a grace period?', kind: 'note', scored: false },
-  { id: 'insurance_required', group: 'Money', label: "Is renter's insurance required, and what liability minimum?", kind: 'note', hint: '$100k liability is typical. Their in-house policy is usually dearer than your own.', scored: false },
-  { id: 'deposit_alternative', group: 'Money', label: 'Is there a deposit alternative, and what does it cost over the lease?', kind: 'note', hint: 'A monthly "deposit waiver" fee is never refunded. Do the arithmetic.', scored: false },
-  { id: 'prorated_first', group: 'Money', label: 'Is the first month prorated if I move in mid-month?', kind: 'yesno', scored: true },
-  { id: 'fees_mandatory', group: 'Money', label: 'Which fees are mandatory even if I never use them?', kind: 'note', hint: 'Amenity, valet trash and package fees are often not optional.', scored: false },
+  // ── At the desk: the money, while you are both sitting down ──────────────
+  { id: 'available_date', stage: 'desk', ask: 'them', label: 'When is it actually available?', kind: 'note', core: true },
+  { id: 'total_move_in', stage: 'desk', ask: 'them', label: 'What is the total to move in, all in?', kind: 'note', hint: 'Make them add it up out loud: deposit, admin, application, pet, first month.', core: true },
+  { id: 'fees_total', stage: 'desk', ask: 'them', label: 'Are there any monthly fees beyond rent?', kind: 'note', hint: 'Amenity, trash, valet, pest, common area, package locker.', core: true },
+  { id: 'move_in_specials', stage: 'desk', ask: 'them', label: 'Any free months, and is it spread or taken at the start?', kind: 'note', hint: 'Spread lowers every month; taken at the start, the rent returns to full. Record it in the costs so the maths is right.', core: true },
+  { id: 'utilities_average', stage: 'desk', ask: 'them', label: 'What do utilities average here in summer and winter?', kind: 'note', hint: 'Ask for both. A cheap place with electric heat may not be.', core: true },
+  { id: 'rent_increase', stage: 'desk', ask: 'them', label: 'How much did rent go up at renewal last year?', kind: 'note', hint: 'A number here tells you what year two costs.', core: true },
+  { id: 'income_requirement', stage: 'desk', ask: 'them', label: 'What income do you require?', kind: 'note', hint: 'Usually 2.5–3× the monthly rent, gross. Worth knowing before you tour a second one.', core: true },
+  { id: 'concession_clawback', stage: 'desk', ask: 'them', label: 'If I leave early, do I pay the free months back?', kind: 'note', hint: 'Usually yes. That turns a cheap lease into an expensive exit.' },
+  { id: 'fees_mandatory', stage: 'desk', ask: 'them', label: 'Which fees are mandatory even if I never use them?', kind: 'note', hint: 'Amenity, valet trash and package fees are often not optional.' },
+  { id: 'deposit_refundable', stage: 'desk', ask: 'them', label: 'Is the deposit refundable, and what gets taken out?', kind: 'yesno', hint: 'Ask what they kept from the last tenant.', scored: true },
+  { id: 'prorated_first', stage: 'desk', ask: 'them', label: 'Is the first month prorated if I move in mid-month?', kind: 'yesno', scored: true },
+  { id: 'utility_billing', stage: 'desk', ask: 'them', label: 'Do I pay the utility company directly, or do you bill me?', kind: 'note', hint: 'A building that splits one bill across units (RUBS) can cost more than metered, and you cannot shop it.' },
+  { id: 'utility_admin_fee', stage: 'desk', ask: 'them', label: 'Is there a fee on top of the utility bill?', kind: 'yesno', hint: 'Billing or "utility admin" fees of $5–15 a month are common.' },
+  { id: 'rent_payment_fee', stage: 'desk', ask: 'them', label: 'Does it cost anything to pay rent?', kind: 'yesno', hint: 'Card fees of 2–3%, or a few dollars for ACH.' },
+  { id: 'late_fee', stage: 'desk', ask: 'them', label: 'What is the late fee, and is there a grace period?', kind: 'note' },
+  { id: 'insurance_required', stage: 'desk', ask: 'them', label: "Is renter's insurance required, and what liability minimum?", kind: 'note', hint: '$100k liability is typical. Their in-house policy is usually dearer than your own.' },
+  { id: 'deposit_alternative', stage: 'desk', ask: 'them', label: 'Is there a deposit alternative, and what does it cost over the lease?', kind: 'note', hint: 'A monthly "deposit waiver" fee is never refunded. Do the arithmetic.' },
+  { id: 'credit_minimum', stage: 'desk', ask: 'them', label: 'What credit score do you need?', kind: 'note', hint: 'Worth knowing before you pay to apply.' },
+  { id: 'guarantor', stage: 'desk', ask: 'them', label: 'Do they accept a guarantor or co-signer?', kind: 'yesno' },
+  { id: 'application_hold', stage: 'desk', ask: 'them', label: 'Does applying hold the unit, and is the fee refundable?', kind: 'yesno' },
+  { id: 'negotiable', stage: 'desk', ask: 'them', label: 'Is the rent or any fee negotiable?', kind: 'yesno', hint: 'Worth asking. Concessions are easier to get than a lower rent.' },
 
-  // The lease
-  { id: 'lease_lengths', group: 'The lease', label: 'What lease lengths are available, and what do they cost?', kind: 'note', scored: false },
-  { id: 'break_lease', group: 'The lease', label: 'What does breaking the lease cost?', kind: 'note', hint: 'Two months plus forfeited deposit is common. Get the number.', scored: false },
-  { id: 'sublet', group: 'The lease', label: 'Can you sublet or reassign the lease?', kind: 'yesno', scored: false },
-  { id: 'renewal_notice', group: 'The lease', label: 'How much notice to renew or leave?', kind: 'note', hint: '60 days is typical; missing it can trigger month-to-month rates.', scored: false },
-  { id: 'add_roommate', group: 'The lease', label: 'Can someone move in later, and what does adding them cost?', kind: 'note', scored: false },
-  { id: 'guest_policy', group: 'The lease', label: 'How long can a guest stay before it becomes a problem?', kind: 'note', scored: false },
-  { id: 'decorating', group: 'The lease', label: 'Can I paint or hang things, and what gets charged at move-out?', kind: 'note', hint: 'Nail holes are the classic deduction.', scored: false },
-  { id: 'smoking', group: 'The lease', label: 'What is the smoking policy, indoors and on balconies?', kind: 'note', scored: false },
-  { id: 'guarantor', group: 'The lease', label: 'Do they accept a guarantor or co-signer?', kind: 'yesno', scored: false },
-  { id: 'lease_price_by_length', group: 'The lease', label: 'What does a longer lease cost, versus a shorter one?', kind: 'note', hint: 'A 15-month lease is often cheaper per month than a 12.', scored: false },
-  { id: 'month_to_month', group: 'The lease', label: 'What is the month-to-month rate when the lease ends?', kind: 'note', hint: 'Often several hundred more a month. This is what you pay if the next place falls through.', scored: false },
-  { id: 'negotiable', group: 'The lease', label: 'Is the rent or any fee negotiable?', kind: 'yesno', hint: 'Worth asking. Concessions are easier to get than a lower rent.', scored: false },
-  { id: 'rent_cap', group: 'The lease', label: 'Is there a cap on the increase at renewal?', kind: 'yesno', scored: false },
-  { id: 'deposit_return_days', group: 'The lease', label: 'How long after moving out do deposits come back?', kind: 'note', hint: 'Your state sets a limit; ask what theirs actually is.', scored: false },
+  // ── Walking round: the building, on the way to the unit ──────────────────
+  { id: 'parking_spot', stage: 'walk', ask: 'them', label: 'Is parking guaranteed, and what does it cost?', kind: 'note', core: true },
+  { id: 'maintenance_response', stage: 'walk', ask: 'them', label: 'How fast is maintenance, and is it 24/7?', kind: 'note', core: true },
+  { id: 'security', stage: 'walk', ask: 'them', label: 'Secure entry, cameras, lighting at night?', kind: 'yesno', scored: true, core: true },
+  { id: 'noise', stage: 'walk', ask: 'you', label: 'How loud is it — neighbours, street, trains?', kind: 'note', hint: 'Stand still and listen for a full minute.', core: true },
+  { id: 'packages', stage: 'walk', ask: 'them', label: 'How are packages handled?', kind: 'note' },
+  { id: 'pests', stage: 'walk', ask: 'them', label: 'Any pest treatment history in the building?', kind: 'yesno', hint: 'A "no" that comes too fast is worth a second question.' },
+  { id: 'water_damage', stage: 'walk', ask: 'them', label: 'Any water damage, mould or flooding history here?', kind: 'yesno' },
+  { id: 'turnover', stage: 'walk', ask: 'them', label: 'How long do people usually stay?', kind: 'note', hint: 'High turnover tells you something the tour will not.' },
+  { id: 'last_tenant', stage: 'walk', ask: 'them', label: 'Why did the last tenant leave, and how long has it been empty?', kind: 'note' },
+  { id: 'who_manages', stage: 'walk', ask: 'them', label: 'Who manages it, and are they on site?', kind: 'note' },
+  { id: 'complaints', stage: 'walk', ask: 'them', label: 'How do I report a problem with a neighbour?', kind: 'note', hint: 'Whether anyone actually handles it is the real question.' },
+  { id: 'repairs_charged', stage: 'walk', ask: 'them', label: 'What repairs get charged back to me?', kind: 'note', hint: 'Clogged drains, lockouts and lost fobs are often billable.' },
+  { id: 'upcoming_work', stage: 'walk', ask: 'them', label: 'Any construction or renovation planned?', kind: 'note', hint: 'Scaffolding outside your window for six months is a real cost.' },
+  { id: 'bins', stage: 'walk', ask: 'them', label: 'Where do the bins go, and when are they collected?', kind: 'note' },
+  { id: 'seasonal', stage: 'walk', ask: 'them', label: 'Who does snow, leaves and the grounds?', kind: 'note' },
+  { id: 'guest_parking', stage: 'walk', ask: 'them', label: 'Where do guests park?', kind: 'note' },
+  { id: 'pets_allowed', stage: 'walk', ask: 'them', label: 'Pets allowed, and any breed or weight limits?', kind: 'yesno' },
 
-  // The unit
-  { id: 'laundry', group: 'The unit', label: 'Laundry in the unit?', kind: 'yesno', hint: 'In-building or a laundromat changes your week and your budget.', scored: true },
-  { id: 'dishwasher', group: 'The unit', label: 'Dishwasher?', kind: 'yesno', scored: true },
-  { id: 'ac_heat', group: 'The unit', label: 'What kind of heating and cooling?', kind: 'note', hint: 'Central, window units, radiators, heat pump — it shows up on the bill.', scored: false },
-  { id: 'water_pressure', group: 'The unit', label: 'Did you run the taps and the shower?', kind: 'yesno', hint: 'Do it. Also flush while the shower runs.', scored: true },
-  { id: 'hot_water', group: 'The unit', label: 'Does the hot water arrive quickly, and run clear?', kind: 'yesno', hint: 'Let it run a minute. Slow or rusty is the water heater telling you something.', scored: true },
-  { id: 'locks', group: 'The unit', label: 'Do all the doors and windows lock?', kind: 'yesno', hint: 'Try them, including the ones behind furniture.', scored: true },
-  { id: 'damp_check', group: 'The unit', label: 'Did you look under the sinks and around the windows?', kind: 'yesno', hint: 'Stains, warping and a damp smell are what you are looking for.', scored: true },
-  { id: 'outlets', group: 'The unit', label: 'Enough outlets, and do they work?', kind: 'yesno', scored: true },
-  { id: 'windows', group: 'The unit', label: 'Which way do the windows face, and do they open?', kind: 'note', scored: false },
-  { id: 'storage', group: 'The unit', label: 'Closet and storage space enough?', kind: 'yesno', scored: true },
-  { id: 'cell_signal', group: 'The unit', label: 'Does your phone have signal inside?', kind: 'yesno', hint: 'Check in the bedroom, not just by the window.', scored: true },
-  { id: 'internet_options', group: 'The unit', label: 'Which internet providers serve the building?', kind: 'note', hint: 'One option means one price.', scored: false },
-  { id: 'appliance_age', group: 'The unit', label: 'How old are the appliances and the water heater?', kind: 'note', scored: false },
-  { id: 'windows_sealed', group: 'The unit', label: 'Are the windows double-glazed and sealed?', kind: 'yesno', hint: 'Single panes and draughts are a heating bill, every winter.', scored: true },
-  { id: 'thermostat', group: 'The unit', label: 'Can I control the heat and air myself?', kind: 'yesno', hint: 'A building-controlled system means you pay for a temperature you did not pick.', scored: true },
-  { id: 'laundry_cost', group: 'The unit', label: 'If laundry is shared, what does a load cost?', kind: 'note', hint: '$3–5 a load is $20–40 a month for most people.', scored: false },
-  { id: 'furnishing_gaps', group: 'The unit', label: 'What would I have to buy myself?', kind: 'note', hint: 'Blinds, light fixtures, a fridge, a shower curtain rod — first-week costs nobody quotes.', scored: false },
-  { id: 'unit_differs', group: 'The unit', label: 'Is this the exact unit, or does mine differ?', kind: 'note', hint: 'Floor, view, layout and appliances vary between units at the same price.', scored: false },
+  // ── In the unit: mostly things to try, not things to ask ─────────────────
+  { id: 'unit_shown', stage: 'unit', ask: 'you', label: 'Is this the unit you would get, not a model?', kind: 'yesno', hint: 'A model apartment is a sales tool. Ask for the real one.', scored: true, core: true },
+  { id: 'water_pressure', stage: 'unit', ask: 'you', label: 'Did you run the taps and the shower?', kind: 'yesno', hint: 'Do it. Also flush while the shower runs.', scored: true, core: true },
+  { id: 'locks', stage: 'unit', ask: 'you', label: 'Do all the doors and windows lock?', kind: 'yesno', hint: 'Try them, including the ones behind furniture.', scored: true, core: true },
+  { id: 'damp_check', stage: 'unit', ask: 'you', label: 'Did you look under the sinks and around the windows?', kind: 'yesno', hint: 'Stains, warping and a damp smell are what you are looking for.', scored: true, core: true },
+  { id: 'laundry', stage: 'unit', ask: 'you', label: 'Laundry in the unit?', kind: 'yesno', hint: 'In-building or a laundromat changes your week and your budget.', scored: true, core: true },
+  { id: 'ac_heat', stage: 'unit', ask: 'them', label: 'What kind of heating and cooling?', kind: 'note', hint: 'Central, window units, radiators, heat pump — it shows up on the bill.', core: true },
+  { id: 'hot_water', stage: 'unit', ask: 'you', label: 'Does the hot water arrive quickly, and run clear?', kind: 'yesno', hint: 'Let it run a minute. Slow or rusty is the water heater telling you something.', scored: true },
+  { id: 'outlets', stage: 'unit', ask: 'you', label: 'Enough outlets, and do they work?', kind: 'yesno', scored: true },
+  { id: 'cell_signal', stage: 'unit', ask: 'you', label: 'Does your phone have signal inside?', kind: 'yesno', hint: 'Check in the bedroom, not just by the window.', scored: true },
+  { id: 'detectors', stage: 'unit', ask: 'you', label: 'Are the smoke and CO detectors in and working?', kind: 'yesno', scored: true },
+  { id: 'windows_sealed', stage: 'unit', ask: 'you', label: 'Are the windows double-glazed and sealed?', kind: 'yesno', hint: 'Single panes and draughts are a heating bill, every winter.', scored: true },
+  { id: 'storage', stage: 'unit', ask: 'you', label: 'Closet and storage space enough?', kind: 'yesno', scored: true },
+  { id: 'windows', stage: 'unit', ask: 'you', label: 'Which way do the windows face, and do they open?', kind: 'note' },
+  { id: 'furnishing_gaps', stage: 'unit', ask: 'you', label: 'What would I have to buy myself?', kind: 'note', hint: 'Blinds, light fixtures, a fridge, a shower curtain rod — first-week costs nobody quotes.' },
+  { id: 'dishwasher', stage: 'unit', ask: 'you', label: 'Dishwasher?', kind: 'yesno', scored: true },
+  { id: 'thermostat', stage: 'unit', ask: 'them', label: 'Can I control the heat and air myself?', kind: 'yesno', hint: 'A building-controlled system means you pay for a temperature you did not pick.', scored: true },
+  { id: 'unit_differs', stage: 'unit', ask: 'them', label: 'If this is a model, how does mine differ?', kind: 'note', hint: 'Floor, view, layout and appliances vary between units at the same price.' },
+  { id: 'internet_options', stage: 'unit', ask: 'them', label: 'Which internet providers serve the building?', kind: 'note', hint: 'One option means one price.' },
+  { id: 'appliance_age', stage: 'unit', ask: 'them', label: 'How old are the appliances and the water heater?', kind: 'note' },
+  { id: 'laundry_cost', stage: 'unit', ask: 'them', label: 'If laundry is shared, what does a load cost?', kind: 'note', hint: '$3–5 a load is $20–40 a month for most people.' },
 
-  // The building
-  { id: 'noise', group: 'The building', label: 'How loud is it — neighbours, street, trains?', kind: 'note', hint: 'Stand still and listen for a full minute.', scored: false },
-  { id: 'maintenance_response', group: 'The building', label: 'How fast is maintenance, and is it 24/7?', kind: 'note', scored: false },
-  { id: 'packages', group: 'The building', label: 'How are packages handled?', kind: 'note', scored: false },
-  { id: 'pests', group: 'The building', label: 'Any pest treatment history in the building?', kind: 'yesno', hint: 'A "no" that comes too fast is worth a second question.', scored: false },
-  { id: 'security', group: 'The building', label: 'Secure entry, cameras, lighting at night?', kind: 'yesno', scored: true },
-  { id: 'turnover', group: 'The building', label: 'How long do people usually stay?', kind: 'note', hint: 'High turnover tells you something the tour will not.', scored: false },
-  { id: 'last_tenant', group: 'The building', label: 'Why did the last tenant leave, and how long has it been empty?', kind: 'note', scored: false },
-  { id: 'complaints', group: 'The building', label: 'How do I report a problem with a neighbour?', kind: 'note', hint: 'Whether anyone actually handles it is the real question.', scored: false },
-  { id: 'bins', group: 'The building', label: 'Where do the bins go, and when are they collected?', kind: 'note', scored: false },
-  { id: 'seasonal', group: 'The building', label: 'Who does snow, leaves and the grounds?', kind: 'note', scored: false },
-  { id: 'who_manages', group: 'The building', label: 'Who manages it, and are they on site?', kind: 'note', scored: false },
-  { id: 'repairs_charged', group: 'The building', label: 'What repairs get charged back to me?', kind: 'note', hint: 'Clogged drains, lockouts and lost fobs are often billable.', scored: false },
-  { id: 'upcoming_work', group: 'The building', label: 'Any construction or renovation planned?', kind: 'note', hint: 'Scaffolding outside your window for six months is a real cost.', scored: false },
-  { id: 'water_damage', group: 'The building', label: 'Any water damage, mould or flooding history here?', kind: 'yesno', scored: false },
-  { id: 'detectors', group: 'The building', label: 'Are the smoke and CO detectors in and working?', kind: 'yesno', scored: true },
-
-  // Parking & pets
-  { id: 'parking_spot', group: 'Parking & pets', label: 'Is parking guaranteed, and what does it cost?', kind: 'note', scored: false },
-  { id: 'guest_parking', group: 'Parking & pets', label: 'Where do guests park?', kind: 'note', scored: false },
-  { id: 'pets_allowed', group: 'Parking & pets', label: 'Pets allowed, and any breed or weight limits?', kind: 'yesno', scored: false },
-
-  // Before you sign
-  { id: 'unit_shown', group: 'Before you sign', label: 'Did you see the actual unit, not a model?', kind: 'yesno', hint: 'A model apartment is a sales tool. Ask for the real one.', scored: true },
-  { id: 'move_in_checklist', group: 'Before you sign', label: 'Will they document existing damage at move-in?', kind: 'yesno', hint: 'Photograph everything the day you get keys, either way.', scored: true },
-  { id: 'available_date', group: 'Before you sign', label: 'When is it actually available?', kind: 'note', scored: false },
-  { id: 'application_hold', group: 'Before you sign', label: 'Does applying hold the unit, and is the fee refundable?', kind: 'yesno', scored: false },
-  { id: 'move_in_window', group: 'Before you sign', label: 'Are there move-in hours, elevator bookings or a fee?', kind: 'note', hint: 'Some buildings only allow weekday moves, which can cost you a day off.', scored: false },
-  { id: 'truck_access', group: 'Before you sign', label: 'Where does a moving truck park?', kind: 'note', scored: false },
-  { id: 'everything_in_writing', group: 'Before you sign', label: 'Will every fee and concession be written into the lease?', kind: 'yesno', hint: 'A verbal "we will waive that" is worth nothing at renewal.', scored: true },
-  { id: 'read_lease', group: 'Before you sign', label: 'Can I take a copy of the lease away to read?', kind: 'yesno', scored: true },
-  { id: 'second_visit', group: 'Before you sign', label: 'Have you seen it at a different time of day?', kind: 'yesno', hint: 'Evening light and evening noise are different things entirely.', scored: true },
-  { id: 'neighbourhood', group: 'Before you sign', label: 'What is within walking distance?', kind: 'note', hint: 'Shop, pharmacy, transport. Walk it, do not map it.', scored: false },
+  // ── Before you leave: the lease, and what to take away with you ──────────
+  { id: 'lease_lengths', stage: 'leave', ask: 'them', label: 'What lease lengths are available, and what do they cost?', kind: 'note', hint: 'A 15-month lease is often cheaper per month than a 12. Ask for the price of each.', core: true },
+  { id: 'break_lease', stage: 'leave', ask: 'them', label: 'What does breaking the lease cost?', kind: 'note', hint: 'Two months plus forfeited deposit is common. Get the number.', core: true },
+  { id: 'renewal_notice', stage: 'leave', ask: 'them', label: 'How much notice to renew or leave?', kind: 'note', hint: '60 days is typical; missing it can trigger month-to-month rates.', core: true },
+  { id: 'everything_in_writing', stage: 'leave', ask: 'them', label: 'Will every fee and concession be written into the lease?', kind: 'yesno', hint: 'A verbal "we will waive that" is worth nothing at renewal.', scored: true, core: true },
+  { id: 'read_lease', stage: 'leave', ask: 'them', label: 'Can I take a copy of the lease away to read?', kind: 'yesno', scored: true, core: true },
+  { id: 'lease_price_by_length', stage: 'leave', ask: 'them', label: 'Is the price per month different on a longer lease?', kind: 'note', hint: 'Longer is often cheaper per month, and a lease ending in winter is harder to re-let.' },
+  { id: 'month_to_month', stage: 'leave', ask: 'them', label: 'What is the month-to-month rate when the lease ends?', kind: 'note', hint: 'Often several hundred more a month. This is what you pay if the next place falls through.' },
+  { id: 'rent_cap', stage: 'leave', ask: 'them', label: 'Is there a cap on the increase at renewal?', kind: 'yesno' },
+  { id: 'deposit_return_days', stage: 'leave', ask: 'them', label: 'How long after moving out do deposits come back?', kind: 'note', hint: 'Your state sets a limit; ask what theirs actually is.' },
+  { id: 'sublet', stage: 'leave', ask: 'them', label: 'Can you sublet or reassign the lease?', kind: 'yesno' },
+  { id: 'add_roommate', stage: 'leave', ask: 'them', label: 'Can someone move in later, and what does adding them cost?', kind: 'note' },
+  { id: 'guest_policy', stage: 'leave', ask: 'them', label: 'How long can a guest stay before it becomes a problem?', kind: 'note' },
+  { id: 'decorating', stage: 'leave', ask: 'them', label: 'Can I paint or hang things, and what gets charged at move-out?', kind: 'note', hint: 'Nail holes are the classic deduction.' },
+  { id: 'smoking', stage: 'leave', ask: 'them', label: 'What is the smoking policy, indoors and on balconies?', kind: 'note' },
+  { id: 'move_in_checklist', stage: 'leave', ask: 'them', label: 'Will they document existing damage at move-in?', kind: 'yesno', hint: 'Photograph everything the day you get keys, either way.', scored: true },
+  { id: 'move_in_window', stage: 'leave', ask: 'them', label: 'Are there move-in hours, elevator bookings or a fee?', kind: 'note', hint: 'Some buildings only allow weekday moves, which can cost you a day off.' },
+  { id: 'truck_access', stage: 'leave', ask: 'them', label: 'Where does a moving truck park?', kind: 'note' },
+  { id: 'second_visit', stage: 'leave', ask: 'you', label: 'Have you seen it at a different time of day?', kind: 'yesno', hint: 'Evening light and evening noise are different things entirely.', scored: true },
+  { id: 'neighbourhood', stage: 'leave', ask: 'you', label: 'What is within walking distance?', kind: 'note', hint: 'Shop, pharmacy, transport. Walk it, do not map it.' }
 ];
 
 /** What you would pay separately if the rent doesn't cover it. */
@@ -351,7 +377,9 @@ export function scorePlace(snapshot: FinancialSnapshot, place: Place, custom: Cu
   const condition = WEIGHTS.condition * (rated === 0 ? 0.6 : average(scores) / 5);
 
   const scoredIds = new Set(tourQuestions(custom).filter((q) => q.scored).map((q) => q.id));
-  const given = place.answers.filter((a) => scoredIds.has(a.id) && (a.answer === 'yes' || a.answer === 'no'));
+  // One answer per question, whatever a restored backup happens to contain:
+  // two entries for the same id would weigh that question twice.
+  const given = [...new Map(place.answers.filter((a) => scoredIds.has(a.id) && (a.answer === 'yes' || a.answer === 'no')).map((a) => [a.id, a])).values()];
   const good = given.filter((a) => a.answer === 'yes').length;
   const fit = WEIGHTS.fit * (given.length === 0 ? 0.6 : good / given.length);
 
@@ -400,27 +428,60 @@ export function placeHighlights(ranked: { place: Place; score: PlaceScore }[]) {
   };
 }
 
-/** The group your own questions land in, at the end of the checklist. */
-export const CUSTOM_GROUP = 'Your questions';
-
-/** The built-in checklist plus anything you added yourself. */
+/**
+ * The built-in checklist plus anything you added yourself. Your own questions
+ * are always in the short list: you would not have written one down to skip it.
+ */
 export function tourQuestions(custom: CustomTourQuestion[] = []): TourQuestion[] {
-  return [...TOUR_QUESTIONS, ...custom.map((q) => ({ id: q.id, group: CUSTOM_GROUP, label: q.label, kind: q.kind, scored: q.kind === 'yesno' }))];
+  return [
+    ...TOUR_QUESTIONS,
+    ...custom.map((q): TourQuestion => ({ id: q.id, stage: 'leave', ask: 'them', label: q.label, kind: q.kind, scored: q.kind === 'yesno', core: true, mine: true })),
+  ];
+}
+
+/** The short list, in tour order — what a normal tour actually covers. */
+export function coreQuestions(custom: CustomTourQuestion[] = []): TourQuestion[] {
+  return tourQuestions(custom).filter((q) => q.core);
+}
+
+/** One stage of the tour, split into the short list and everything else. */
+export function stageQuestions(stage: TourStage, custom: CustomTourQuestion[] = []): { core: TourQuestion[]; more: TourQuestion[] } {
+  const here = tourQuestions(custom).filter((q) => q.stage === stage && !q.mine);
+  return { core: here.filter((q) => q.core), more: here.filter((q) => !q.core) };
 }
 
 const recorded = (place: Place) => new Set(place.answers.filter((a) => a.answer !== undefined || (a.note ?? '').trim().length > 0).map((a) => a.id));
 
-/** How much of the tour checklist you got through. */
-export function checklistProgress(place: Place, custom: CustomTourQuestion[] = []): { answered: number; total: number } {
+/**
+ * How much of the tour you got through. The short list is what progress means —
+ * counting all seventy would make a good tour look like a failure.
+ */
+export function checklistProgress(place: Place, custom: CustomTourQuestion[] = []): { answered: number; total: number; extra: number } {
   const all = tourQuestions(custom);
   const done = recorded(place);
-  return { answered: all.filter((q) => done.has(q.id)).length, total: all.length };
+  const core = all.filter((q) => q.core);
+  return {
+    answered: core.filter((q) => done.has(q.id)).length,
+    total: core.length,
+    extra: all.filter((q) => !q.core && done.has(q.id)).length,
+  };
 }
 
-/** The questions with nothing recorded yet — what to ask before you leave. */
+/** The questions with nothing recorded yet, short list first. */
 export function unanswered(place: Place, custom: CustomTourQuestion[] = []): TourQuestion[] {
   const done = recorded(place);
-  return tourQuestions(custom).filter((q) => !done.has(q.id));
+  const left = tourQuestions(custom).filter((q) => !done.has(q.id));
+  return [...left.filter((q) => q.core), ...left.filter((q) => !q.core)];
+}
+
+/**
+ * What is left of the short list, split by who can answer it. Sixteen questions
+ * for a leasing agent is a conversation; forty is an interrogation, and the
+ * things only you can answer cost them nothing at all.
+ */
+export function stillToDo(place: Place, custom: CustomTourQuestion[] = []): { ask: TourQuestion[]; check: TourQuestion[] } {
+  const left = unanswered(place, custom).filter((q) => q.core);
+  return { ask: left.filter((q) => q.ask === 'them'), check: left.filter((q) => q.ask === 'you') };
 }
 
 /** A fee line ready to drop into a place. */

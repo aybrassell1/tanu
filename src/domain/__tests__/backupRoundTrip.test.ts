@@ -38,6 +38,7 @@ const place: Place = {
   included: ['water', 'trash'],
   firstMonthUpfront: true,
   leaseMonths: 12,
+  concession: { freeMonths: 2, applied: 'spread', upfrontCredit: 25_000, note: 'Ends 31 Oct' },
   answers: [{ id: 'laundry', answer: 'yes' }, { id: 'rent_increase', note: 'Went up 4%' }],
   ratings: [{ id: 'light', score: 4 }],
   notes: 'Third floor, quiet side',
@@ -90,6 +91,9 @@ describe('a backup keeps everything it was given', () => {
     expect(back.answers).toHaveLength(2);
     expect(back.ratings[0].score).toBe(4);
     expect(back.notes).toBe('Third floor, quiet side');
+    // The offer decides what the rent actually is, so losing it would change
+    // the grade of a place you already toured.
+    expect(back.concession).toEqual({ freeMonths: 2, applied: 'spread', upfrontCredit: 25_000, note: 'Ends 31 Oct' });
   });
 
   it('brings back questions you added yourself', () => {

@@ -6,7 +6,8 @@ import { GradeBadge, RatingRow, StatusPicker } from '@/components/places/Parts';
 import { Banner, Button, Card, Disclosure, EmptyState, IconButton, KeyValue, Money, NavHeader, Pill, ProgressBar, Row, Screen, Section, Sheet, Text, TextField, useOverlay } from '@/components/ui';
 import { financialSnapshot } from '@/domain/affordability';
 import { formatDate } from '@/domain/dates';
-import { CUSTOM_GROUP, RATINGS, checklistProgress, scorePlace, tourQuestions, unanswered } from '@/domain/places';
+import { RATINGS, TOUR_STAGES, checklistProgress, scorePlace, stageQuestions, stillToDo, tourQuestions } from '@/domain/places';
+import type { TourQuestion } from '@/domain/places';
 import type { Place, PlaceAnswer } from '@/domain/types';
 import { useData, useDerived, useMoney, useToday } from '@/store/hooks';
 import { ledger } from '@/store/ledger';
@@ -45,7 +46,8 @@ export default function PlaceScreen() {
   const questions = tourQuestions(custom);
   const scored = scorePlace(snapshot, place, custom);
   const progress = checklistProgress(place, custom);
-  const left = unanswered(place, custom);
+  const todo = stillToDo(place, custom);
+  const mine = questions.filter((q) => q.mine);
   const answerFor = (questionId: string): PlaceAnswer | undefined => place.answers.find((a) => a.id === questionId);
 
   const remove = async () => {
@@ -54,8 +56,6 @@ export default function PlaceScreen() {
     toast({ message: 'Place deleted', actionLabel: 'Undo', onAction: ledger.undo });
     router.back();
   };
-
-  const groups = [...new Set(questions.map((q) => q.group))];
 
   return (
     <Screen
@@ -165,49 +165,49 @@ export default function PlaceScreen() {
         </Card>
       </Section>
 
-      <Section title="Ask on the tour" subtitle={`${progress.answered} of ${progress.total} recorded`}>
-        {left.length > 0 && (
+      <Section title="Ask on the tour" subtitle={`${progress.answered} of ${progress.total}${progress.extra > 0 ? ` · ${progress.extra} extra` : ''}`}>
+        {todo.ask.length + todo.check.length === 0 ? (
+          <Banner tone="positive" icon="check" title="You covered the short list" message="Anything else is under each part of the tour." />
+        ) : (
           <Banner
             tone="muted"
             icon="help-circle"
-            title={`${left.length} still to ask`}
-            message={left.slice(0, 3).map((q) => q.label).join('  ·  ')}
+            title={[todo.ask.length > 0 && `${todo.ask.length} to ask them`, todo.check.length > 0 && `${todo.check.length} to check yourself`].filter(Boolean).join(', ')}
+            message={[...todo.ask, ...todo.check].slice(0, 3).map((q) => q.label).join('  ·  ')}
           />
         )}
-        {groups.map((group) => (
-          <Disclosure key={group} label={group} initiallyOpen={group === 'Money' || group === CUSTOM_GROUP}>
-            <View style={{ gap: spacing.lg }}>
-              {questions.filter((q) => q.group === group).map((q) => {
-                const a = answerFor(q.id);
-                return (
-                  <View key={q.id} style={{ gap: spacing.xs }}>
-                    <Text weight="medium">{q.label}</Text>
-                    {!!q.hint && (
-                      <Text variant="caption" color={colors.textTertiary}>
-                        {q.hint}
-                      </Text>
-                    )}
-                    {q.kind === 'yesno' && (
-                      <View style={styles.answers}>
-                        {ANSWERS.map((o) => (
-                          <Pill
-                            key={o.value}
-                            size="sm"
-                            icon={o.icon}
-                            label={o.label}
-                            selected={a?.answer === o.value}
-                            onPress={() => ledger.answerPlaceQuestion(place.id, q.id, { answer: a?.answer === o.value ? undefined : o.value })}
-                          />
-                        ))}
-                      </View>
-                    )}
-                    <NoteField place={place} questionId={q.id} value={a?.note ?? ''} placeholder={q.kind === 'note' ? 'What did they say?' : 'Add a note'} />
-                  </View>
-                );
-              })}
-            </View>
-          </Disclosure>
-        ))}
+      </Section>
+
+      {TOUR_STAGES.map((stage) => {
+        const here = stageQuestions(stage.id, custom);
+        return (
+          <Section key={stage.id} title={stage.label}>
+            <Card style={{ gap: spacing.lg }}>
+              {here.core.map((q) => (
+                <QuestionRow key={q.id} placeId={place.id} question={q} answer={answerFor(q.id)} />
+              ))}
+            </Card>
+            {here.more.length > 0 && (
+              <Disclosure label="More questions" count={here.more.length}>
+                <Card style={{ gap: spacing.lg }}>
+                  {here.more.map((q) => (
+                    <QuestionRow key={q.id} placeId={place.id} question={q} answer={answerFor(q.id)} />
+                  ))}
+                </Card>
+              </Disclosure>
+            )}
+          </Section>
+        );
+      })}
+
+      <Section title="Your questions">
+        {mine.length > 0 && (
+          <Card style={{ gap: spacing.lg }}>
+            {mine.map((q) => (
+              <QuestionRow key={q.id} placeId={place.id} question={q} answer={answerFor(q.id)} />
+            ))}
+          </Card>
+        )}
         <AddQuestion />
       </Section>
 
@@ -220,10 +220,39 @@ export default function PlaceScreen() {
   );
 }
 
-function NoteField({ place, questionId, value, placeholder }: { place: Place; questionId: string; value: string; placeholder: string }) {
+/** A question and whatever you have recorded against it, saved as you go. */
+function QuestionRow({ placeId, question, answer }: { placeId: string; question: TourQuestion; answer: PlaceAnswer | undefined }) {
+  return (
+    <View style={{ gap: spacing.xs }}>
+      <Text weight="medium">{question.label}</Text>
+      {!!question.hint && (
+        <Text variant="caption" color={colors.textTertiary}>
+          {question.hint}
+        </Text>
+      )}
+      {question.kind === 'yesno' && (
+        <View style={styles.answers}>
+          {ANSWERS.map((o) => (
+            <Pill
+              key={o.value}
+              size="sm"
+              icon={o.icon}
+              label={o.label}
+              selected={answer?.answer === o.value}
+              onPress={() => ledger.answerPlaceQuestion(placeId, question.id, { answer: answer?.answer === o.value ? undefined : o.value })}
+            />
+          ))}
+        </View>
+      )}
+      <NoteField placeId={placeId} questionId={question.id} value={answer?.note ?? ''} placeholder={question.kind === 'note' ? 'What did they say?' : 'Add a note'} />
+    </View>
+  );
+}
+
+function NoteField({ placeId, questionId, value, placeholder }: { placeId: string; questionId: string; value: string; placeholder: string }) {
   const [text, setText] = useState(value);
   const save = () => {
-    if (text !== value) ledger.answerPlaceQuestion(place.id, questionId, { note: text });
+    if (text !== value) ledger.answerPlaceQuestion(placeId, questionId, { note: text });
   };
   // Saved while you type as well as on blur: a tour ends when someone walks
   // away, not when a field politely loses focus.
