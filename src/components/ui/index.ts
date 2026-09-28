@@ -27,4 +27,5 @@ export { OverlayProvider, Sheet, useOverlay } from './Overlay';
 export { Pill, PILL_TONES, type PillTone } from './Pill';
 export { ProgressBar, ProgressRing, SplitBar, type Segment } from './Progress';
 export { Segmented, SegmentedTabs } from './SegmentedTabs';
+export { SwipeToDelete } from './SwipeToDelete';
 export { Text } from './Text';

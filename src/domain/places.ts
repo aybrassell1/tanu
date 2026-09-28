@@ -26,11 +26,11 @@ export type QuestionKind = 'yesno' | 'note';
  */
 export type TourStage = 'desk' | 'walk' | 'unit' | 'leave';
 
-export const TOUR_STAGES: { id: TourStage; label: string }[] = [
-  { id: 'desk', label: 'At the desk' },
-  { id: 'walk', label: 'Walking round' },
-  { id: 'unit', label: 'In the unit' },
-  { id: 'leave', label: 'Before you leave' },
+export const TOUR_STAGES: { id: TourStage; label: string; short: string }[] = [
+  { id: 'desk', label: 'At the desk', short: 'Desk' },
+  { id: 'walk', label: 'Walking round', short: 'Building' },
+  { id: 'unit', label: 'In the unit', short: 'Unit' },
+  { id: 'leave', label: 'Before you leave', short: 'Lease' },
 ];
 
 export interface TourQuestion {

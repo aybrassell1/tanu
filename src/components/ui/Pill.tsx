@@ -32,10 +32,16 @@ type PillProps = {
   selected?: boolean;
   style?: StyleProp<ViewStyle>;
   accessibilityLabel?: string;
+  /**
+   * Room around the pill that still counts as a press. The default suits a
+   * badge you rarely tap; raise it for a control someone uses one-handed while
+   * walking, where a small pill is a small target.
+   */
+  hitSlop?: number;
 };
 
 /** Rounded badge or chip, like the template's "⚡ How it works" / "Step - 1". */
-export function Pill({ label, icon, emoji, trailingIcon, tone = 'light', size = 'md', onPress, selected, style, accessibilityLabel }: PillProps) {
+export function Pill({ label, icon, emoji, trailingIcon, tone = 'light', size = 'md', onPress, selected, style, accessibilityLabel, hitSlop = 4 }: PillProps) {
   const t = PILL_TONES[selected ? 'dark' : tone];
   const small = size === 'sm';
   const content = (
@@ -54,7 +60,7 @@ export function Pill({ label, icon, emoji, trailingIcon, tone = 'light', size = 
       accessibilityState={selected === undefined ? undefined : { selected }}
       accessibilityLabel={accessibilityLabel ?? label}
       onPress={onPress}
-      hitSlop={4}
+      hitSlop={hitSlop}
       style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
     >
       {content}
