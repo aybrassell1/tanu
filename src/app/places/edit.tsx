@@ -111,8 +111,8 @@ export default function PlaceEditScreen() {
         </Stack>
       </Section>
 
-      <Section title="Every month, on top of rent">
-        <FeeEditor when="monthly" fees={draft.fees} onChange={setFees} emptyHint="Tap a fee to add it, or add your own. Utilities count toward the 30% rule; the rest are just costs." />
+      <Section title="Other monthly fees">
+        <FeeEditor when="monthly" fees={draft.fees} onChange={setFees} emptyHint="Parking, amenity, pet rent — anything that arrives every month that is not rent or a utility." />
       </Section>
 
       <Section title="Any deal on?" subtitle="Free months change the rent by hundreds, depending how they are applied">

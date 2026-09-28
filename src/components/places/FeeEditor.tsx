@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Button, MoneyField, Pill, Sheet, Text, TextField } from '@/components/ui';
-import { FEE_PRESETS, newFee } from '@/domain/places';
+import { FEE_PRESETS, isUtilityLine, newFee } from '@/domain/places';
 import { createId } from '@/domain/factory';
 import type { Cents, FeeWhen, PlaceFee } from '@/domain/types';
 import { colors, spacing } from '@/theme/tokens';
@@ -28,7 +28,9 @@ export function FeeEditor({
 }) {
   const [adding, setAdding] = useState(false);
   const [label, setLabel] = useState('');
-  const mine = fees.filter((f) => f.when === when);
+  // The named utilities are entered in their own section; showing them here
+  // too would be two boxes for one bill.
+  const mine = fees.filter((f) => f.when === when && !isUtilityLine(f));
   const used = new Set(mine.map((f) => f.label.toLowerCase()));
   const presets = FEE_PRESETS.filter((p) => p.when === when && !used.has(p.label.toLowerCase()));
 

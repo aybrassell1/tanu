@@ -375,6 +375,13 @@ export function setUtilityCost(fees: PlaceFee[], utility: string, label: string,
 /** What you have written down for a utility, if anything. */
 export const utilityCost = (fees: PlaceFee[], utility: string) => fees.find((f) => f.id === utilityFeeId(utility));
 
+/**
+ * Whether a line is one of the seven named utilities, which have a section of
+ * their own. It is still an ordinary fee in every total — it just has one place
+ * to be typed, not two.
+ */
+export const isUtilityLine = (fee: PlaceFee) => UTILITIES.some((u) => utilityFeeId(u.id) === fee.id);
+
 /** Fees you can add with one tap, instead of typing the same labels every time. */
 export const FEE_PRESETS: { label: string; when: FeeWhen; utility?: boolean }[] = [
   { label: 'Parking', when: 'monthly' },
@@ -387,11 +394,6 @@ export const FEE_PRESETS: { label: string; when: FeeWhen; utility?: boolean }[] 
   { label: 'Common area (CAM)', when: 'monthly' },
   { label: 'Rent payment fee', when: 'monthly' },
   { label: "Renter's insurance", when: 'monthly' },
-  { label: 'Electric', when: 'monthly', utility: true },
-  { label: 'Gas', when: 'monthly', utility: true },
-  { label: 'Water & sewer', when: 'monthly', utility: true },
-  { label: 'Trash', when: 'monthly', utility: true },
-  { label: 'Internet', when: 'monthly', utility: true },
   { label: 'Security deposit', when: 'upfront' },
   { label: 'Admin fee', when: 'upfront' },
   { label: 'Application fee', when: 'upfront' },
