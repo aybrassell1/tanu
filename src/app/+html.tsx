@@ -63,8 +63,24 @@ const SERVICE_WORKER = `
   // Dev servers rebuild constantly; a cache there only serves stale pages.
   var local = ['localhost', '127.0.0.1'].indexOf(window.location.hostname) !== -1;
   if ('serviceWorker' in navigator && !local) {
+    // A home-screen app is usually resumed, not started: iOS restores the page
+    // it suspended, so a build shipped since then is never fetched and the app
+    // looks like it simply did not change. Ask on every return to the front.
+    var had = !!navigator.serviceWorker.controller;
     window.addEventListener('load', function () {
-      navigator.serviceWorker.register(new URL('sw.js', window.location.href).pathname).catch(function () {});
+      navigator.serviceWorker.register(new URL('sw.js', window.location.href).pathname).then(function (reg) {
+        document.addEventListener('visibilitychange', function () {
+          if (document.visibilityState === 'visible') reg.update().catch(function () {});
+        });
+      }).catch(function () {});
+    });
+    // A worker taking over means a newer build is ready. On the very first
+    // registration there was nothing to replace, so that one is not a change.
+    var reloading = false;
+    navigator.serviceWorker.addEventListener('controllerchange', function () {
+      if (!had || reloading) return;
+      reloading = true;
+      window.location.reload();
     });
   }
 `;
