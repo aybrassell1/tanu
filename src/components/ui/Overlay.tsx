@@ -147,10 +147,10 @@ export function OverlayProvider({ children }: { children: ReactNode }) {
               <Button label={dialog?.cancelLabel ?? 'Cancel'} variant="secondary" onPress={() => close(false)} style={{ flex: 1 }} />
               <Button
                 label={dialog?.confirmLabel ?? 'Confirm'}
-                variant={dialog?.destructive ? 'dark' : 'primary'}
+                variant={dialog?.destructive ? 'destructive' : 'primary'}
                 onPress={() => close(true)}
                 disabled={blocked}
-                style={[{ flex: 1 }, dialog?.destructive && { backgroundColor: colors.negative, borderColor: colors.negative }]}
+                style={{ flex: 1 }}
               />
             </View>
           </View>

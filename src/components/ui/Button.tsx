@@ -13,6 +13,10 @@ const variants = {
   dark: { bg: colors.ink, pressed: colors.inkPressed, fg: colors.onInk, border: colors.ink },
   ghost: { bg: 'transparent', pressed: colors.surfaceMuted, fg: colors.primary, border: 'transparent' },
   danger: { bg: colors.surface, pressed: colors.negativeSoft, fg: colors.negative, border: colors.border },
+  // Filled red, for the confirm button on a dialog that is about to delete
+  // something. `onPrimary` is near-white against a dark accent and near-black
+  // against a light one, so it reads in both themes.
+  destructive: { bg: colors.negative, pressed: colors.negativePressed, fg: colors.onPrimary, border: colors.negative },
 } as const;
 
 type ButtonProps = {
@@ -37,7 +41,7 @@ export function Button({ label, onPress, variant = 'primary', size = 'md', icon,
   const inactive = disabled || loading;
   const press = usePressScale();
   return (
-    <Animated.View style={[fullWidth && styles.fullWidth, press.style, style]}>
+    <Animated.View style={[styles.wrap, fullWidth && styles.fullWidth, press.style, style]}>
       <Pressable
         accessibilityRole="button"
         accessibilityState={{ disabled: inactive }}
@@ -105,7 +109,11 @@ export function IconButton({ icon, onPress, variant = 'light', size = 40, access
 }
 
 const styles = StyleSheet.create({
-  base: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', alignSelf: 'flex-start', gap: 6, borderWidth: 1 },
+  // The wrapper decides how wide the button is — content by default, or
+  // whatever a caller's `style` says — and the button itself fills it. The other
+  // way round, a button given `flex: 1` sat in the corner of its own space.
+  base: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderWidth: 1 },
+  wrap: { alignSelf: 'flex-start' },
   fullWidth: { alignSelf: 'stretch' },
   icon: { alignItems: 'center', justifyContent: 'center', borderRadius: radius.pill, borderWidth: 1 },
 });

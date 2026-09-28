@@ -56,6 +56,7 @@ export const colors = {
   positiveSoft: token('positiveSoft'),
   /** Money out / critical status. */
   negative: token('negative'),
+  negativePressed: token('negativePressed'),
   negativeSoft: token('negativeSoft'),
   warning: token('warning'),
   warningSoft: token('warningSoft'),

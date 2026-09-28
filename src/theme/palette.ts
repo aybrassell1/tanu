@@ -43,6 +43,8 @@ export interface Palette {
   positive: string;
   positiveSoft: string;
   negative: string;
+  /** A filled destructive button, held down. */
+  negativePressed: string;
   negativeSoft: string;
   warning: string;
   warningSoft: string;
@@ -109,6 +111,7 @@ export const LIGHT: Palette = {
   positive: '#15803D',
   positiveSoft: '#E8F6EC',
   negative: '#C92A2A',
+  negativePressed: '#A61E1E',
   negativeSoft: '#FDECEC',
   warning: '#B45309',
   warningSoft: '#FEF3E2',
@@ -169,6 +172,7 @@ export const DARK: Palette = {
   positive: '#4ADE80',
   positiveSoft: '#12291C',
   negative: '#FF7A7A',
+  negativePressed: '#E56767',
   negativeSoft: '#301618',
   warning: '#F0B357',
   warningSoft: '#2E2213',
