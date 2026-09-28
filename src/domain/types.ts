@@ -771,7 +771,15 @@ export type FeeWhen = 'monthly' | 'upfront';
 export interface PlaceFee {
   id: ID;
   label: string;
+  /** The amount, or the bottom of the range when `high` is set. */
   amount: Cents;
+  /**
+   * The top of a range. Leasing offices quote plenty of costs as "somewhere
+   * between": electric $50 to $200, a deposit of $500 to $1,700 depending on
+   * the credit check. Writing down the low end alone is how a budget quietly
+   * becomes wrong every January.
+   */
+  high?: Cents;
   when: FeeWhen;
   /** Counts as housing for the 30%-of-income rule, like electric or water. */
   utility?: boolean;

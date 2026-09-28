@@ -99,10 +99,12 @@ type MoneyFieldProps = {
   placeholder?: string;
   autoFocus?: boolean;
   onBlur?: () => void;
+  /** Needed where the visible label sits outside the field, as in a table row. */
+  accessibilityLabel?: string;
 };
 
 /** Currency input that stores integer cents and keeps the user's typing intact. */
-export function MoneyField({ label, value, onChange, hint, error, optional, allowNegative, placeholder = '0.00', autoFocus, onBlur }: MoneyFieldProps) {
+export function MoneyField({ label, value, onChange, hint, error, optional, allowNegative, placeholder = '0.00', autoFocus, onBlur, accessibilityLabel }: MoneyFieldProps) {
   const [text, setText] = useState(centsToInput(value));
   // The last value this field reported. A different incoming value is an external
   // change (a reset or a preset), so the text follows it; our own echo is ignored
@@ -122,6 +124,7 @@ export function MoneyField({ label, value, onChange, hint, error, optional, allo
   return (
     <TextField
       label={label}
+      accessibilityLabel={accessibilityLabel}
       hint={hint}
       error={error ?? (invalid ? (parsedText !== null && parsedText < 0 ? 'Enter a positive amount.' : 'Use a number like 12.34.') : undefined)}
       onBlur={onBlur}

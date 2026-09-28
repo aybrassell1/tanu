@@ -1,14 +1,16 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
+import { View } from 'react-native';
 
 import { FeeEditor } from '@/components/places/FeeEditor';
-import { Banner, Button, ChipSelect, DateField, MoneyField, NavHeader, NumberField, Screen, Section, Stack, SwitchRow, TextField, useOverlay } from '@/components/ui';
-import { UTILITIES, newPlace, placeCost } from '@/domain/places';
+import { Banner, Button, ChipSelect, DateField, MoneyField, NavHeader, NumberField, Row, Screen, Section, Stack, SwitchRow, Text, TextField, useOverlay } from '@/components/ui';
+import { UTILITIES, newPlace, placeCost, setUtilityCost, utilityCost } from '@/domain/places';
 import { concessionEffect } from '@/domain/places';
-import type { Place, PlaceConcession, PlaceFee } from '@/domain/types';
+import type { Cents, Place, PlaceConcession, PlaceFee } from '@/domain/types';
 import { goBackOr } from '@/lib/navigation';
 import { useData, useMoney, useToday } from '@/store/hooks';
 import { ledger } from '@/store/ledger';
+import { colors } from '@/theme/tokens';
 
 type Draft = Omit<Place, 'id' | 'createdAt' | 'updatedAt'> & { id?: string };
 
@@ -65,8 +67,47 @@ export default function PlaceEditScreen() {
             options={UTILITIES.map((u) => ({ value: u.id, label: u.label }))}
             value={draft.included}
             onChange={(v) => set('included', draft.included.includes(v) ? draft.included.filter((x) => x !== v) : [...draft.included, v])}
-            hint="Tap what the rent covers. Anything left is yours to pay — add it below."
+            hint="Tap what the rent covers."
           />
+        </Stack>
+      </Section>
+
+      <Section title="Utilities you pay" subtitle="A range is fine — winter is not summer">
+        <Stack>
+          {UTILITIES.filter((u) => !draft.included.includes(u.id)).map((u) => {
+            const line = utilityCost(draft.fees, u.id);
+            return (
+              <Row key={u.id}>
+                <Text style={{ flex: 1 }}>{u.label}</Text>
+                <View style={{ width: 104 }}>
+                  <MoneyField
+                    value={line?.amount || undefined}
+                    onChange={(v: Cents | undefined) => setFees(setUtilityCost(draft.fees, u.id, u.label, v, line?.high))}
+                    accessibilityLabel={`${u.label}, typical or lowest`}
+                  />
+                </View>
+                <Text variant="small" color={colors.textTertiary}>
+                  to
+                </Text>
+                <View style={{ width: 104 }}>
+                  <MoneyField
+                    value={line?.high || undefined}
+                    onChange={(v: Cents | undefined) => setFees(setUtilityCost(draft.fees, u.id, u.label, line?.amount, v))}
+                    placeholder="—"
+                    accessibilityLabel={`${u.label}, highest`}
+                  />
+                </View>
+              </Row>
+            );
+          })}
+          {draft.included.length === UTILITIES.length && (
+            <Text variant="small" color={colors.textSecondary}>
+              The rent covers all of them. Nothing to add.
+            </Text>
+          )}
+          <Text variant="caption" color={colors.textTertiary}>
+            Leave the second box empty for a fixed amount. Where you give a range, the grade uses the top of it.
+          </Text>
         </Stack>
       </Section>
 
@@ -118,14 +159,14 @@ export default function PlaceEditScreen() {
         </Stack>
       </Section>
 
-      {cost.monthly > 0 && (
+      {cost.priced && (
         <Banner
           tone="primary"
           icon="dollar-sign"
-          title={`${money(cost.monthly)} a month, all in`}
+          title={cost.ranged ? `${money(cost.monthly)} to ${money(cost.monthlyHigh)} a month` : `${money(cost.monthly)} a month, all in`}
           message={
-            cost.aboveRent > 0
-              ? `${money(cost.aboveRent)} on top of the rent, and ${money(cost.upfront)} before you get the keys.`
+            cost.aboveRentHigh > 0
+              ? `${cost.ranged ? `${money(cost.aboveRent)} to ${money(cost.aboveRentHigh)}` : money(cost.aboveRent)} on top of the rent, and ${cost.upfrontHigh > cost.upfront ? `${money(cost.upfront)} to ${money(cost.upfrontHigh)}` : money(cost.upfront)} before you get the keys.`
               : 'Rent only so far. Add the fees and utilities to see the real number.'
           }
         />

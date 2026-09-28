@@ -48,6 +48,10 @@ export default function PlaceScreen() {
   const progress = checklistProgress(place, custom);
   const todo = stillToDo(place, custom);
   const mine = questions.filter((q) => q.mine);
+  const cost = scored.cost;
+  // A range prints as a span wherever a single figure would have gone; where
+  // nothing was quoted as a range the two ends are the same number.
+  const span = (low: number, high: number) => (high > low ? `${money(low)} to ${money(high)}` : money(low));
   const answerFor = (questionId: string): PlaceAnswer | undefined => place.answers.find((a) => a.id === questionId);
 
   const remove = async () => {
@@ -73,28 +77,41 @@ export default function PlaceScreen() {
             <Text variant="small" color={colors.textSecondary}>
               All in, every month
             </Text>
-            <Money cents={scored.cost.monthly} variant="h2" />
+            {cost.ranged ? <Text variant="h2">{span(cost.monthly, cost.monthlyHigh)}</Text> : <Money cents={cost.monthly} variant="h2" />}
             <Text variant="caption" color={colors.textTertiary}>
-              {scored.cost.aboveRent > 0 ? `Rent plus ${money(scored.cost.aboveRent)} of utilities and fees` : 'Rent only — add the fees to see the real number'}
+              {cost.aboveRentHigh > 0
+                ? `Rent plus ${span(cost.aboveRent, cost.aboveRentHigh)} of utilities and fees`
+                : 'Rent only — add the fees to see the real number'}
             </Text>
           </View>
         </Row>
         {scored.grade && <ProgressBar value={scored.score / 100} color={GRADE_COLOR(scored.grade)} accessibilityLabel={`Score ${scored.score} out of 100`} />}
         <View style={styles.pills}>
           {scored.basis === 'full' && <Pill size="sm" icon="home" label={`${Math.round(scored.rentShare * 100)}% of gross pay`} />}
-          <Pill size="sm" icon="credit-card" label={`${money(scored.cost.upfront)} up front`} />
+          <Pill size="sm" icon="credit-card" label={`${span(cost.upfront, cost.upfrontHigh)} up front`} />
           {place.touredOn && <Pill size="sm" icon="calendar" label={`Toured ${formatDate(place.touredOn, 'short', today)}`} />}
         </View>
-        {scored.basis === 'no_income' ? (
+        {scored.basis !== 'full' ? (
           <Text variant="small" color={colors.textSecondary}>
-            No income recorded yet, so there is nothing to weigh this rent against. Add your pay and spending and the grade appears.
+            {scored.basis === 'no_income'
+              ? 'No income recorded yet, so there is nothing to weigh this rent against. Add your pay and spending and the grade appears.'
+              : 'No rent entered yet, so there is nothing to grade. Add what they are asking and the letter appears.'}
           </Text>
         ) : (
-          scored.weakest && (
-            <Text variant="small" color={colors.textSecondary}>
-              {WEAKEST_NOTE[scored.weakest]}
-            </Text>
-          )
+          <>
+            {scored.weakest && (
+              <Text variant="small" color={colors.textSecondary}>
+                {scored.weakest === 'fit'
+                  ? `${scored.answered - Math.round((scored.parts.fit / 20) * scored.answered)} of the ${scored.answered} things you asked came back as a no.`
+                  : WEAKEST_NOTE[scored.weakest]}
+              </Text>
+            )}
+            {cost.ranged && (
+              <Text variant="caption" color={colors.textTertiary}>
+                Graded on the top of the ranges — a month where everything lands high.
+              </Text>
+            )}
+          </>
         )}
       </Card>
 
@@ -115,12 +132,13 @@ export default function PlaceScreen() {
 
       <Section title="What it costs" subtitle="Everything, not just the rent">
         <Card>
-          {scored.cost.breakdown.map((b) => (
-            <KeyValue key={b.key} label={b.label} value={money(b.amount)} />
+          {cost.breakdown.length === 0 && <KeyValue label="Nothing costed yet" value="—" />}
+          {cost.breakdown.map((b) => (
+            <KeyValue key={b.key} label={b.label} value={span(b.amount, b.high ?? b.amount)} />
           ))}
-          <KeyValue label="Every month" value={money(scored.cost.monthly)} />
-          <KeyValue label="Due at signing" value={money(scored.cost.upfront)} hint={scored.cost.upfrontBreakdown.map((b) => b.label).join(' · ')} />
-          <KeyValue label="First year, all in" value={money(scored.cost.firstYear)} />
+          <KeyValue label="Every month" value={span(cost.monthly, cost.monthlyHigh)} />
+          <KeyValue label="Due at signing" value={span(cost.upfront, cost.upfrontHigh)} hint={cost.upfrontBreakdown.map((b) => b.label).join(' · ')} />
+          <KeyValue label="First year, all in" value={span(cost.firstYear, cost.firstYearHigh)} />
         </Card>
       </Section>
 
@@ -150,7 +168,7 @@ export default function PlaceScreen() {
           onPress={() =>
             router.push({
               pathname: '/afford/rent',
-              params: { rent: String(place.rent), utilities: String(scored.cost.utilities), insurance: '0', other: String(scored.cost.aboveRent - scored.cost.utilities), moveIn: String(scored.cost.upfront) },
+              params: { rent: String(scored.cost.rent), utilities: String(scored.cost.utilitiesHigh), insurance: '0', other: String(scored.cost.aboveRentHigh - scored.cost.utilitiesHigh), moveIn: String(scored.cost.upfrontHigh) },
             })
           }
         />

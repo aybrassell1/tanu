@@ -70,8 +70,14 @@ export function FeeEditor({
                 )}
               </View>
             </View>
-            <View style={{ width: 118 }}>
-              <MoneyField value={fee.amount || undefined} onChange={(v: Cents | undefined) => update(fee.id, { amount: v ?? 0 })} />
+            <View style={{ width: 108, gap: 6 }}>
+              <MoneyField value={fee.amount || undefined} onChange={(v: Cents | undefined) => update(fee.id, { amount: v ?? 0 })} accessibilityLabel={`${fee.label} amount`} />
+              <MoneyField
+                value={fee.high || undefined}
+                onChange={(v: Cents | undefined) => update(fee.id, { high: v && v > fee.amount ? v : undefined })}
+                placeholder="up to"
+                accessibilityLabel={`${fee.label}, top of the range`}
+              />
             </View>
             <Pressable onPress={() => remove(fee.id)} hitSlop={8} accessibilityRole="button" accessibilityLabel={`Remove ${fee.label}`} style={styles.remove}>
               <Feather name="x" size={16} color={colors.textTertiary} />

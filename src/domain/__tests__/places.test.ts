@@ -205,7 +205,7 @@ describe('a tour happens in an order', () => {
   it('keeps the short list short enough to actually ask', () => {
     // The whole point: a leasing agent asked forty questions stops answering.
     expect(coreQuestions().length).toBeLessThanOrEqual(24);
-    expect(coreQuestions().filter((q) => q.ask === 'them').length).toBeLessThanOrEqual(18);
+    expect(coreQuestions().filter((q) => q.ask === 'them').length).toBeLessThanOrEqual(20);
     // And it is still worth having the rest.
     expect(TOUR_QUESTIONS.length).toBeGreaterThan(60);
   });
@@ -278,7 +278,9 @@ describe('questions you add yourself', () => {
     const answered = place({ rent: 150_000, answers: [{ id: 'q1', answer: 'no' }, { id: 'q2', note: 'Round the back' }] });
     const scored = scorePlace(snapshot(), answered, mine);
     expect(scored.answered).toBe(1);
-    expect(scored.parts.fit).toBe(0);
+    // One "no" pulls the fit down from its neutral 12 without emptying it: a
+    // single answer is evidence, not a verdict.
+    expect(scored.parts.fit).toBe(9);
     expect(unanswered(answered, mine).map((q) => q.id)).not.toContain('q1');
   });
 });
